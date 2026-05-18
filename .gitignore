@@ -1,0 +1,12 @@
+.DS_Store
+node_modules
+.env
+dist
+
+prisma/quickzhiin/schema.prisma
+prisma/core/schema.prisma
+
+.DS_Store
+logs/
+
+*.log

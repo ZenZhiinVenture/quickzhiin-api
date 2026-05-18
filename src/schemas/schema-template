@@ -1,0 +1,10 @@
+import { z } from 'zod';
+
+export const createSchema = z.object({});
+
+export const updateSchema = z.object({
+  params: z.object({
+    id: z.string().transform(val => BigInt(val)), // Expecting ID in URL params
+  }),
+  body: z.object({}),
+});
