@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2em;
+      }
+      h1 {
+        color: #333;
+      }
+      .item {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Invoice #{{invoiceNumber}}</h1>
+    <p>Date: {{date}}</p>
+
+    {{#each items}}
+    <div class="item">{{name}} — ${{price}}</div>
+    {{/each}}
+
+    <h3>Total: ${{total}}</h3>
+  </body>
+</html>

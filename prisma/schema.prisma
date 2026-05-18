@@ -1,0 +1,1776 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Enums ---
+
+enum AuditType {
+  SYSTEM
+  USER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+}
+
+enum AuditChannel {
+  WEB
+  API
+  MOBILE
+}
+
+enum DepreciationMethod {
+  STRAIGHT_LINE
+  DECLINING_BALANCE
+}
+
+enum DepreciationMode {
+  FIXED
+  PERCENTAGE
+}
+
+enum DepreciationConvention {
+  FULL_MONTH
+  HALF_YEAR
+  MID_MONTH
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum AccountSubType {
+  CURRENT_ASSET
+  FIXED_ASSET
+  OTHER_ASSET
+  CURRENT_LIABILITY
+  LONG_TERM_LIABILITY
+  OTHER_LIABILITY
+  RETAINED_EARNINGS
+  OWNER_EQUITY
+  OTHER_EQUITY
+  SALES
+  SERVICE_REVENUE
+  OTHER_REVENUE
+  OPERATING_EXPENSE
+  COST_OF_GOODS_SOLD
+  DEPRECIATION
+  OTHER_EXPENSE
+}
+
+enum BankTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  FEE
+  INTEREST
+  ADJUSTMENT
+}
+
+enum BankTransactionStatus {
+  PENDING
+  CLEARED
+  RECONCILED
+}
+
+enum ContactType {
+  COMPANY
+  BRANCH
+  EMPLOYEE
+  CUSTOMER
+  SUPPLIER
+}
+
+enum RegistrationNumberType {
+  NONE
+  BRN
+  IC
+  PASSPORT
+}
+
+enum ReconciliationStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  NONE
+  LINK
+  TEXT
+  TABLE
+}
+
+enum SettingType {
+  NUMBER
+  BOOLEAN
+  STRING
+  ARRAY
+}
+
+enum StateType {
+  NONE
+  STATE
+  PROVINCE
+  REGION
+  DIVISION
+}
+
+enum TransactionType {
+  ASSET_DEPRECIATE
+  ASSET_DISPOSE
+  BANK_ADJUSTMENT
+  BANK_EXPENSE
+  BANK_INCOME
+  BANK_TRANSFER
+  CONTRA
+  PURCHASE_BILL
+  PURCHASE_CREDIT_NOTE
+  PURCHASE_GOOD_RECEIVE
+  PURCHASE_ORDER
+  PURCHASE_PAYMENT
+  PURCHASE_QUOTATION
+  PURCHASE_REFUND
+  SALE_CREDIT_NOTE
+  SALE_DELIVERY_ORDER
+  SALE_INVOICE
+  SALE_ORDER
+  SALE_PAYMENT
+  SALE_QUOTATION
+  SALE_REFUND
+  STOCK_ADJUSTMENT
+  STOCK_TRANSFER
+  STOCK_VALUE
+}
+
+enum TransactionStatusType {
+  DRAFT
+  PENDING
+  READY
+  PAID
+}
+
+// --- Models ---
+
+model Account {
+  id          BigInt          @id @default(autoincrement())
+  code        String          @unique
+  name        String
+  type        AccountType
+  subtype     AccountSubType?
+  description String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  isSystem  Boolean  @default(false) @map("is_system")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser     User?              @relation("AccountCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser     User?              @relation("AccountUpdatedBy", fields: [updatedBy], references: [id])
+  journalEntryLines JournalEntryLine[]
+  paymentMethods    PaymentMethod[]
+  bankAccount       BankAccount?
+
+  @@map("accounts")
+}
+
+model Asset {
+  id          BigInt @id @default(autoincrement())
+  name        String
+  assetTag    String @unique
+  assetTypeId Int
+
+  assetAccountId        Int
+  depreciationAccountId Int
+  expenseAccountId      Int
+
+  defaultMethod     DepreciationMethod
+  defaultConvention DepreciationConvention
+  defaultMode       DepreciationMode
+  defaultRate       Float
+  defaultYear       Int
+  defaultMonth      Int
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User?     @relation("AssetCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?     @relation("AssetUpdatedBy", fields: [updatedBy], references: [id])
+  assetType     AssetType @relation(fields: [assetTypeId], references: [id])
+
+  @@map("assets")
+}
+
+model AssetType {
+  id            Int                @id @default(autoincrement())
+  name          String             @unique
+  description   String?
+  defaultMethod DepreciationMethod
+  defaultRate   Float
+  defaultMode   DepreciationMode
+  defaultYears  Int?
+  defaultMonths Int?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User?   @relation("AssetTypeCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?   @relation("AssetTypeUpdatedBy", fields: [updatedBy], references: [id])
+  assets        Asset[]
+
+  @@map("asset_types")
+}
+
+model AuditContact {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  contactId BigInt
+  action    String
+  oldData   String
+  newData   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("AuditContactCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("AuditContactUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("audit_contacts")
+}
+
+model AuditTrail {
+  id        BigInt       @id @default(autoincrement())
+  userId    BigInt
+  tableName String       @map("table_name")
+  type      AuditType
+  action    AuditAction
+  channel   AuditChannel
+  source    String?
+  oldData   Json?
+  newData   Json?
+  createdAt DateTime     @default(now())
+
+  user User @relation("UserAudit", fields: [userId], references: [id])
+
+  @@map("audit_trails")
+}
+
+model BankAccount {
+  id            BigInt  @id @default(autoincrement())
+  name          String
+  bankName      String
+  accountNumber String
+  currency      String
+  balance       Decimal @default(0)
+  accountId     BigInt? @unique
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  account         Account?             @relation(fields: [accountId], references: [id])
+  createdByUser   User?                @relation("BankAccountCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser   User?                @relation("BankAccountUpdatedBy", fields: [updatedBy], references: [id])
+  transactions    BankTransaction[]
+  reconciliations BankReconciliation[]
+  bankStatements  BankStatement[]
+
+  @@map("bank_accounts")
+}
+
+model BankStatement {
+  id             BigInt   @id @default(autoincrement())
+  bankAccountId  BigInt
+  fileName       String   @map("file_name")
+  fileUrl        String?  @map("file_url")
+  periodStart    DateTime @map("period_start")
+  periodEnd      DateTime @map("period_end")
+  openingBalance Decimal  @default(0) @map("opening_balance")
+  closingBalance Decimal  @default(0) @map("closing_balance")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  bankAccount   BankAccount       @relation(fields: [bankAccountId], references: [id])
+  transactions  BankTransaction[]
+  createdByUser User?             @relation("BankStatementCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?             @relation("BankStatementUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("bank_statements")
+}
+
+model BankReconciliation {
+  id                BigInt               @id @default(autoincrement())
+  bankAccountId     BigInt
+  periodStart       DateTime
+  periodEnd         DateTime
+  statementBalance  Decimal
+  reconciledBalance Decimal
+  status            ReconciliationStatus @default(DRAFT)
+  notes             String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  bankAccount   BankAccount       @relation(fields: [bankAccountId], references: [id])
+  transactions  BankTransaction[]
+  createdByUser User?             @relation("BankReconciliationCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?             @relation("BankReconciliationUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("bank_reconciliations")
+}
+
+model BankTransaction {
+  id               BigInt                @id @default(autoincrement())
+  bankAccountId    BigInt
+  bankStatementId  BigInt?
+  date             DateTime
+  type             BankTransactionType
+  amount           Decimal
+  description      String?
+  reference        String?
+  status           BankTransactionStatus @default(PENDING)
+  reconciliationId BigInt?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  bankAccount    BankAccount                  @relation(fields: [bankAccountId], references: [id])
+  bankStatement  BankStatement?               @relation(fields: [bankStatementId], references: [id])
+  reconciliation BankReconciliation?          @relation(fields: [reconciliationId], references: [id])
+  createdByUser  User?                        @relation("BankTransactionCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser  User?                        @relation("BankTransactionUpdatedBy", fields: [updatedBy], references: [id])
+  matchedLines   BankTransactionLineMatched[]
+
+  @@map("bank_transactions")
+}
+
+model BankTransactionLineMatched {
+  id                 BigInt  @id @default(autoincrement())
+  bankTransactionId  BigInt  @map("bank_transaction_id")
+  journalEntryLineId BigInt  @map("journal_entry_line_id")
+  amount             Decimal @db.Decimal(15, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy BigInt?  @map("created_by")
+
+  bankTransaction  BankTransaction  @relation(fields: [bankTransactionId], references: [id])
+  journalEntryLine JournalEntryLine @relation(fields: [journalEntryLineId], references: [id])
+  createdByUser    User?            @relation("BankTransactionLineMatchedCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("bank_transaction_line_matched")
+}
+
+model Bill {
+  id              BigInt                @id @default(autoincrement())
+  number          String                @unique
+  date            DateTime
+  contactId       BigInt                @map("contact_id")
+  subtotal        Decimal
+  tax             Decimal               @default(0)
+  discount        Decimal               @default(0)
+  rounding        Decimal               @default(0)
+  total           Decimal
+  status          TransactionStatusType @default(DRAFT)
+  notes           String?
+  billingAddress  String?
+  shippingAddress String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  contact        Contact         @relation("BillContact", fields: [contactId], references: [id])
+  billLines      BillLine[]
+  payments       BillPayment[]
+  refunds        BillRefund[]
+  billCreditNote BillCreditNote?
+  createdByUser  User?           @relation("BillCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser  User?           @relation("BillUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("bills")
+}
+
+model BillCreditNote {
+  id         BigInt                @id @default(autoincrement())
+  number     String                @unique
+  date       DateTime
+  billId     BigInt?               @unique
+  contactId  BigInt                @map("contact_id")
+  amount     Decimal
+  reason     String
+  status     TransactionStatusType @default(DRAFT)
+  currency   String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  bill            Bill?                @relation(fields: [billId], references: [id])
+  contact         Contact              @relation("BillCreditNoteContact", fields: [contactId], references: [id])
+  creditNoteLines BillCreditNoteLine[]
+  createdByUser   User?                @relation("BillCreditNoteCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser   User?                @relation("BillCreditNoteUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("bill_credit_notes")
+}
+
+model BillCreditNoteLine {
+  id                 BigInt  @id @default(autoincrement())
+  billCreditNoteId   BigInt  @unique
+  productName        String
+  description        String
+  classificationCode String
+  quantity           BigInt
+  unitPrice         Decimal
+  discount           Decimal
+  tax                Decimal
+  total              Decimal
+  taxId              BigInt? @unique
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  billCreditNote BillCreditNote @relation(fields: [billCreditNoteId], references: [id])
+  taxCode        TaxCode?       @relation("TaxCodeBillCreditNoteLine", fields: [taxId], references: [id], map: "tax_code_bill_credit_note_line_fk")
+  createdByUser  User?          @relation("BillCreditNoteLineCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser  User?          @relation("BillCreditNoteLineUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("bill_credit_note_lines")
+}
+
+model BillLine {
+  id                 BigInt  @id @default(autoincrement())
+  billId             BigInt  @unique
+  productName        String
+  description        String
+  classificationCode String
+  quantity           BigInt
+  unitPrice         Decimal
+  discount           Decimal
+  tax                Decimal
+  total              Decimal
+  taxId              BigInt? @unique
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  bill          Bill     @relation(fields: [billId], references: [id])
+  taxCode       TaxCode? @relation("TaxCodeBillLine", fields: [taxId], references: [id], map: "tax_code_bill_line_fk")
+  createdByUser User?    @relation("BillLineCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?    @relation("BillLineUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("bill_lines")
+}
+
+model BillPayment {
+  id       BigInt   @id @default(autoincrement())
+  billId   BigInt   @unique
+  amount   Decimal
+  methodId BigInt   @unique
+  paidAt   DateTime
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  bill          Bill          @relation(fields: [billId], references: [id])
+  method        PaymentMethod @relation(fields: [methodId], references: [id])
+  createdByUser User?         @relation("BillPaymentCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?         @relation("BillPaymentUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("bill_payments")
+}
+
+model BillRefund {
+  id         BigInt   @id @default(autoincrement())
+  billId     BigInt   @unique
+  amount     Decimal
+  reason     String
+  methodId   BigInt   @unique
+  refundedAt DateTime
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  bill          Bill          @relation(fields: [billId], references: [id])
+  method        PaymentMethod @relation(fields: [methodId], references: [id])
+  createdByUser User?         @relation("BillRefundCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?         @relation("BillRefundUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("bill_refunds")
+}
+
+model BusinessCode {
+  id          BigInt  @id @default(autoincrement())
+  code        String  @unique
+  name        String
+  reference   String?
+  description String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("BusinessCodeCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("BusinessCodeUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("business_codes")
+}
+
+model ClassficationCode {
+  id          BigInt  @id @default(autoincrement())
+  code        String  @unique
+  description String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("ClassficationCodeCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("ClassficationCodeUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("classification_codes")
+}
+
+model Contact {
+  id                          BigInt                  @id @default(autoincrement())
+  parentId                    BigInt?                 @map("parent_id")
+  legalname                   String
+  contactType                 ContactType
+  regNoType                   RegistrationNumberType?
+  regNo                       String?
+  taxNo                       String?
+  pfNo                        String?
+  businessCodeId              String?
+  website                     String?
+  logoUrl                     String?
+  position                    String?
+  joinDate                    DateTime?
+  userId                      BigInt?
+  departmentId                Int?
+  defaultCountryId            Int?
+  accountsReceivableAccountId BigInt?
+  accountsPayableAccountId    BigInt?
+  creditLimit                 Decimal                 @default(0) @db.Decimal(15, 2)
+  paymentTerms                Int                     @default(0)
+  sstNo                       String?                 @map("sst_no")
+  msicCode                    String?                 @map("msic_code")
+  isCustomer                  Boolean                 @default(false) @map("is_customer")
+  isSupplier                  Boolean                 @default(false) @map("is_supplier")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  parent           Contact?         @relation("ContactParent", fields: [parentId], references: [id])
+  children         Contact[]        @relation("ContactParent")
+  user             User?            @relation("ContactUser", fields: [userId], references: [id])
+  createdByUser    User?            @relation("ContactCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser    User?            @relation("ContactUpdatedBy", fields: [updatedBy], references: [id])
+  contactAddresses ContactAddress[]
+  contact_persons  ContactPerson[]
+  salesQuotes      SalesQuote[]        @relation("SalesQuoteContact")
+  salesOrders      SalesOrder[]        @relation("SalesOrderContact")
+  deliveryOrders   DeliveryOrder[]     @relation("DeliveryOrderContact")
+  invoices         Invoice[]           @relation("InvoiceContact")
+  bills            Bill[]              @relation("BillContact")
+  purchaseOrders   PurchaseOrder[]     @relation("PurchaseOrderContact")
+  goodsReceived    GoodsReceivedNote[] @relation("GoodsReceivedContact")
+  invoiceCreditNotes InvoiceCreditNote[] @relation("InvoiceCreditNoteContact")
+  billCreditNotes    BillCreditNote[]    @relation("BillCreditNoteContact")
+
+  @@unique([legalname, regNoType, regNo])
+  @@index([contactType])
+  @@index([parentId])
+  @@index([userId])
+  @@index([departmentId])
+  @@map("contacts")
+}
+
+model ContactAddress {
+  id           BigInt  @id @default(autoincrement())
+  contactId    BigInt
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  countryCode  String
+  purpose      String
+  isPrimary    Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  contact       Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdByUser User?   @relation("ContactAddressCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?   @relation("ContactAddressUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("contact_address")
+}
+
+model ContactPerson {
+  id        BigInt  @id @default(autoincrement())
+  contactId BigInt
+  name      String
+  position  String?
+  email     String?
+  phone     String?
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  contact       Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdByUser User?   @relation("ContactPersonCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?   @relation("ContactPersonUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("contact_persons")
+}
+
+model Country {
+  id             BigInt @id @default(autoincrement())
+  name           String
+  code           String @db.Char(2)
+  currencyCode   String
+  currencyName   String
+  currencySymbol String
+  flag           String
+  decimalPlaces  Int    @default(2)
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("CountryCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("CountryUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@unique([code])
+  @@unique([currencyCode])
+  @@index([name])
+  @@map("countries")
+}
+
+model Department {
+  id          BigInt  @id @default(autoincrement())
+  code        String  @unique
+  name        String
+  description String
+  parentId    BigInt? @map("parent_id")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  parent        Department?           @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children      Department[]          @relation("DepartmentHierarchy")
+  purchaseReqs  PurchaseRequisition[]
+  createdByUser User?                 @relation("DepartmentCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?                 @relation("DepartmentUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@unique([parentId, name])
+  @@map("departments")
+}
+
+model Device {
+  id         BigInt   @id @default(autoincrement())
+  userId     BigInt
+  deviceUUID String
+  deviceName String
+  deviceType String
+  os         String
+  osVersion  String
+  appVersion String
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("devices")
+}
+
+model EInvoiceType {
+  id          BigInt @id @default(autoincrement())
+  code        String
+  description String
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("EInvoiceTypeCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("EInvoiceTypeUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("einvoice_types")
+}
+
+model Invoice {
+  id              BigInt                @id @default(autoincrement())
+  number          String                @unique
+  date            DateTime
+  contactId       BigInt                @map("contact_id")
+  currency        String
+  subtotal        Decimal
+  tax             Decimal               @default(0)
+  discount        Decimal               @default(0)
+  rounding        Decimal               @default(0)
+  total           Decimal
+  status          TransactionStatusType @default(DRAFT)
+  notes           String?
+  paymentTerms    String?
+  dueDate         DateTime?
+  canceledAt      DateTime?
+  billingAddress  String?
+  shippingAddress String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  contact           Contact            @relation("InvoiceContact", fields: [contactId], references: [id])
+  invoiceLines      InvoiceLine[]
+  invoicePayments   InvoicePayment[]
+  invoiceRefunds    InvoiceRefund[]
+  invoiceCreditNote InvoiceCreditNote?
+  createdByUser     User?              @relation("InvoiceCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser     User?              @relation("InvoiceUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("invoices")
+}
+
+model InvoiceCreditNote {
+  id         BigInt                @id @default(autoincrement())
+  number     String                @unique
+  date       DateTime
+  invoiceId  BigInt?               @unique
+  contactId  BigInt                @map("contact_id")
+  amount     Decimal
+  reason     String
+  status     TransactionStatusType @default(DRAFT)
+  currency   String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  invoice               Invoice?                @relation(fields: [invoiceId], references: [id])
+  contact               Contact                 @relation("InvoiceCreditNoteContact", fields: [contactId], references: [id])
+  invoiceCreditNoteLine InvoiceCreditNoteLine[]
+  createdByUser         User?                   @relation("InvoiceCreditNoteCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser         User?                   @relation("InvoiceCreditNoteUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("invoice_credit_notes")
+}
+
+model InvoiceCreditNoteLine {
+  id                  BigInt  @id @default(autoincrement())
+  invoiceCreditNoteId BigInt
+  productName         String
+  description         String
+  classificationCode  String
+  quantity            BigInt
+  unitPrice          Decimal
+  discount            Decimal
+  tax                 Decimal
+  total               Decimal
+  taxId               BigInt? @unique
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  invoiceCreditNote InvoiceCreditNote @relation(fields: [invoiceCreditNoteId], references: [id])
+  taxCode           TaxCode?          @relation("TaxCodeInvoiceCreditNoteLine", fields: [taxId], references: [id], map: "tax_code_invoice_credit_note_line_fk")
+  createdByUser     User?             @relation("InvoiceCreditNoteLineCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser     User?             @relation("InvoiceCreditNoteLineUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("invoice_credit_note_lines")
+}
+
+model InvoiceLine {
+  id                 BigInt   @id @default(autoincrement())
+  invoiceId          BigInt   @unique
+  productId          BigInt?
+  productName        String
+  description        String?
+  classificationCode String?
+  msicCode           String?
+  msicDescription    String?
+  quantity           Decimal  @db.Decimal(19, 4)
+  unitPrice         Decimal  @db.Decimal(19, 4)
+  discount           Decimal  @default(0)
+  tax                Decimal  @default(0)
+  total              Decimal
+  taxId              BigInt?  @unique
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id])
+  taxCode       TaxCode? @relation("TaxCodeInvoiceLine", fields: [taxId], references: [id], map: "tax_code_invoice_line_fk")
+  createdByUser User?    @relation("InvoiceLineCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?    @relation("InvoiceLineUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("invoice_lines")
+}
+
+model InvoicePayment {
+  id        BigInt   @id @default(autoincrement())
+  invoiceId BigInt
+  amount    Decimal
+  methodId  BigInt   @unique
+  paidAt    DateTime
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+  method        PaymentMethod @relation(fields: [methodId], references: [id])
+  createdByUser User?         @relation("InvoicePaymentCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?         @relation("InvoicePaymentUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("invoice_payments")
+}
+
+model InvoiceRefund {
+  id         BigInt   @id @default(autoincrement())
+  invoiceId  BigInt
+  amount     Decimal
+  reason     String
+  methodId   BigInt   @unique
+  refundedAt DateTime
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+  method        PaymentMethod @relation(fields: [methodId], references: [id])
+  createdByUser User?         @relation("InvoiceRefundCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?         @relation("InvoiceRefundUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("invoice_refunds")
+}
+
+model Journal {
+  id        BigInt   @id @default(autoincrement())
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("JournalCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("JournalUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("journals")
+}
+
+model JournalEntry {
+  id        BigInt                @id @default(autoincrement())
+  number    String                @unique
+  date      DateTime
+  reference String?
+  narration String?
+  status    TransactionStatusType @default(DRAFT)
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  lines         JournalEntryLine[]
+  createdByUser User?              @relation("JournalEntryCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?              @relation("JournalEntryUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("journal_entries")
+}
+
+model JournalEntryLine {
+  id             BigInt  @id @default(autoincrement())
+  journalEntryId BigInt  @map("journal_entry_id")
+  accountId      BigInt  @map("account_id")
+  description    String?
+  debit          Decimal @default(0) @db.Decimal(15, 2)
+  credit         Decimal @default(0) @db.Decimal(15, 2)
+  taxId          BigInt? @map("tax_id")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  journalEntry  JournalEntry @relation(fields: [journalEntryId], references: [id])
+  account       Account      @relation(fields: [accountId], references: [id])
+  taxCode       TaxCode?     @relation(fields: [taxId], references: [id])
+  createdByUser User?        @relation("JournalEntryLineCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?        @relation("JournalEntryLineUpdatedBy", fields: [updatedBy], references: [id])
+
+  matchedBankLines BankTransactionLineMatched[]
+
+  @@map("journal_entry_lines")
+}
+
+model Notification {
+  id       BigInt           @id @default(autoincrement())
+  userId   BigInt
+  title    String
+  subtitle String?
+  url      String?
+  type     NotificationType
+  isRead   Boolean          @default(true) @map("is_read")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("NotificationCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("NotificationUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("notifications")
+}
+
+model PaymentMethod {
+  id          BigInt  @id @default(autoincrement())
+  code        String  @unique
+  name        String
+  description String?
+  accountId   BigInt?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  account        Account?        @relation(fields: [accountId], references: [id])
+  billPayment    BillPayment?
+  billRefund     BillRefund?
+  invoicePayment InvoicePayment?
+  invoiceRefund  InvoiceRefund?
+  createdByUser  User?           @relation("PaymentMethodCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser  User?           @relation("PaymentMethodUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("payment_methods")
+}
+
+model PaymentTerm {
+  id          BigInt  @id @default(autoincrement())
+  code        String  @unique
+  name        String
+  description String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("PaymentTermCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("PaymentTermUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("payment_terms")
+}
+
+model Permission {
+  id              BigInt           @id @default(autoincrement())
+  name            String           @unique
+  description     String?
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model Product {
+  id                  BigInt   @id @default(autoincrement())
+  name                String
+  sku                 String?  @unique
+  barcode             String?  @unique
+  description         String?
+  classificationCode  BigInt?
+  productType         String   @default("Service") @map("product_type")
+  salePrice           Decimal? @default(0) @map("sale_price") @db.Decimal(19, 4)
+  saleDescription     String?
+  saleAccountId       BigInt?
+  purchasePrice       Decimal? @default(0) @map("purchase_price") @db.Decimal(19, 4)
+  purchaseDescription String?
+  purchaseAccountId   BigInt?
+  uom                 String?  @map("unit_of_measure")
+  quantityOnHand      Decimal? @default(0) @map("quantity_on_hand") @db.Decimal(19, 4)
+  reorderLevel        Decimal? @map("reorder_level") @db.Decimal(19, 4)
+  isInventory         Boolean  @default(false) @map("is_inventory")
+  categoryId          BigInt?
+  msicCode            String?  @map("msic_code")
+  msicDescription     String?  @map("msic_description")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  category           ProductCategory?          @relation(fields: [categoryId], references: [id])
+  productBundleItems ProductBundleItem[]
+  salesQuoteLines    SalesQuoteLine[]
+  salesOrderLines    SalesOrderLine[]
+  deliveryOrderLines DeliveryOrderLine[]
+  purchaseReqLines   PurchaseRequisitionLine[]
+  purchaseOrderLines PurchaseOrderLine[]
+  grnLines           GoodsReceivedNoteLine[]
+  warehouseInventory WarehouseInventory[]
+  stockMovements     StockMovement[]
+  createdByUser      User?                     @relation("ProductCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser      User?                     @relation("ProductUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("products")
+}
+
+model ProductBundle {
+  id            BigInt    @id @default(autoincrement())
+  name          String
+  description   String?
+  availableFrom DateTime? @map("start_date")
+  availableTo   DateTime? @map("end_date")
+  totalPrice    Decimal?  @map("total_price") @db.Decimal(19, 4)
+  limit         BigInt?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  bundleItems   ProductBundleItem[]
+  createdByUser User?               @relation("BundleCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?               @relation("BundleUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("product_bundles")
+}
+
+model ProductBundleItem {
+  id            BigInt   @id @default(autoincrement())
+  bundleId      BigInt   @map("bundle_id")
+  productId     BigInt   @map("product_id")
+  quantity      Decimal  @default(1) @db.Decimal(10, 2)
+  overridePrice Decimal? @map("override_price") @db.Decimal(19, 4)
+
+  bundle  ProductBundle @relation(fields: [bundleId], references: [id])
+  product Product       @relation(fields: [productId], references: [id])
+
+  @@unique([bundleId, productId])
+  @@map("product_bundle_items")
+}
+
+model ProductCategory {
+  id          BigInt  @id @default(autoincrement())
+  name        String
+  description String?
+  parentId    BigInt? @map("parent_id")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  parent        ProductCategory?  @relation("CategoryParent", fields: [parentId], references: [id])
+  children      ProductCategory[] @relation("CategoryParent")
+  products      Product[]
+  createdByUser User?             @relation("ProductCategoryCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?             @relation("ProductCategoryUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("product_categories")
+}
+
+model RecurringInvoice {
+  id        BigInt   @id @default(autoincrement())
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("RecurringInvoiceCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("RecurringInvoiceUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("recurring_invoices")
+}
+
+model Role {
+  id          BigInt  @id @default(autoincrement())
+  name        String  @unique
+  description String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  users           User[]
+  rolePermissions RolePermission[]
+  createdByUser   User?            @relation("RoleCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser   User?            @relation("RoleUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("roles")
+}
+
+model RolePermission {
+  roleId       BigInt
+  permissionId BigInt
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Setting {
+  id          BigInt      @id @default(autoincrement())
+  key         String      @unique
+  value       String
+  description String
+  type        SettingType
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("SettingCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("SettingUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("settings")
+}
+
+model State {
+  id        BigInt    @id @default(autoincrement())
+  code      String
+  name      String
+  type      StateType
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy BigInt?   @map("created_by")
+  updatedBy BigInt?   @map("updated_by")
+
+  createdByUser User? @relation("StateCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("StateUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("states")
+}
+
+model TaxCode {
+  id          BigInt  @id @default(autoincrement())
+  name        String
+  code        String  @unique
+  countryCode String
+  description String?
+  rate        Decimal
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser         User?                  @relation("TaxCodeCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser         User?                  @relation("TaxCodeUpdatedBy", fields: [updatedBy], references: [id])
+  billLineTax           BillLine?              @relation("TaxCodeBillLine", map: "tax_code_bill_line_fk")
+  billCreditNoteLineTax BillCreditNoteLine?    @relation("TaxCodeBillCreditNoteLine", map: "tax_code_bill_credit_note_line_fk")
+  invoiceLineTax        InvoiceLine?           @relation("TaxCodeInvoiceLine", map: "tax_code_invoice_line_fk")
+  invCreditNoteLineTax  InvoiceCreditNoteLine? @relation("TaxCodeInvoiceCreditNoteLine", map: "tax_code_invoice_credit_note_line_fk")
+  journalEntryLines     JournalEntryLine[]
+
+  @@map("tax_codes")
+}
+
+model TaxableType {
+  id          BigInt @id @default(autoincrement())
+  description String
+  code        String @unique
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("TaxableTypeCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("TaxableTypeUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("taxable_types")
+}
+
+model UnitType {
+  id   BigInt @id @default(autoincrement())
+  name String
+  code String @unique
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  createdByUser User? @relation("UnitTypeCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("UnitTypeUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("unit_types")
+}
+
+model User {
+  id           BigInt    @id @default(autoincrement())
+  roleId       BigInt
+  googleId     String?
+  discordId    String?
+  passwordHash String    @map("password_hash")
+  email        String    @unique
+  firstName    String?   @map("first_name")
+  lastName     String?   @map("last_name")
+  phone        String?
+  status       String    @default("active")
+  lastLogin    DateTime? @map("last_login")
+  lastLoginIp  String?   @map("last_login_ip")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?
+  updatedBy BigInt?
+
+  role          Role   @relation(fields: [roleId], references: [id])
+  createdByUser User?  @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?  @relation("UserUpdatedBy", fields: [updatedBy], references: [id])
+  createdUsers  User[] @relation("UserCreatedBy")
+  updatedUsers  User[] @relation("UserUpdatedBy")
+
+  // Business Relations
+  auditTrails                  AuditTrail[]            @relation("UserAudit")
+  auditContactCreated          AuditContact[]          @relation("AuditContactCreatedBy")
+  auditContactUpdated          AuditContact[]          @relation("AuditContactUpdatedBy")
+  accountCreated               Account[]               @relation("AccountCreatedBy")
+  accountUpdated               Account[]               @relation("AccountUpdatedBy")
+  assetCreated                 Asset[]                 @relation("AssetCreatedBy")
+  assetUpdated                 Asset[]                 @relation("AssetUpdatedBy")
+  assetTypeCreated             AssetType[]             @relation("AssetTypeCreatedBy")
+  assetTypeUpdated             AssetType[]             @relation("AssetTypeUpdatedBy")
+  bankAccountCreated           BankAccount[]           @relation("BankAccountCreatedBy")
+  bankAccountUpdated           BankAccount[]           @relation("BankAccountUpdatedBy")
+  bankReconciliationCreated    BankReconciliation[]    @relation("BankReconciliationCreatedBy")
+  bankReconciliationUpdated    BankReconciliation[]    @relation("BankReconciliationUpdatedBy")
+  bankTransactionCreated       BankTransaction[]       @relation("BankTransactionCreatedBy")
+  bankTransactionUpdated       BankTransaction[]       @relation("BankTransactionUpdatedBy")
+  billCreated                  Bill[]                  @relation("BillCreatedBy")
+  billUpdated                  Bill[]                  @relation("BillUpdatedBy")
+  billCreditNoteCreated        BillCreditNote[]        @relation("BillCreditNoteCreatedBy")
+  billCreditNoteUpdated        BillCreditNote[]        @relation("BillCreditNoteUpdatedBy")
+  billCreditNoteLineCreated    BillCreditNoteLine[]    @relation("BillCreditNoteLineCreatedBy")
+  billCreditNoteLineUpdated    BillCreditNoteLine[]    @relation("BillCreditNoteLineUpdatedBy")
+  billLineCreated              BillLine[]              @relation("BillLineCreatedBy")
+  billLineUpdated              BillLine[]              @relation("BillLineUpdatedBy")
+  billPaymentsCreated          BillPayment[]           @relation("BillPaymentCreatedBy")
+  billPaymentsUpdated          BillPayment[]           @relation("BillPaymentUpdatedBy")
+  billRefundCreated            BillRefund[]            @relation("BillRefundCreatedBy")
+  billRefundUpdated            BillRefund[]            @relation("BillRefundUpdatedBy")
+  bundleCreated                ProductBundle[]         @relation("BundleCreatedBy")
+  bundleUpdated                ProductBundle[]         @relation("BundleUpdatedBy")
+  businessCodeCreated          BusinessCode[]          @relation("BusinessCodeCreatedBy")
+  businessCodeUpdated          BusinessCode[]          @relation("BusinessCodeUpdatedBy")
+  classficationCodeCreated     ClassficationCode[]     @relation("ClassficationCodeCreatedBy")
+  classficationCodeUpdated     ClassficationCode[]     @relation("ClassficationCodeUpdatedBy")
+  contacts                     Contact[]               @relation("ContactUser")
+  contactsCreatedBy            Contact[]               @relation("ContactCreatedBy")
+  contactsUpdatedBy            Contact[]               @relation("ContactUpdatedBy")
+  contactAddressCreatedBy      ContactAddress[]        @relation("ContactAddressCreatedBy")
+  contactAddressUpdatedBy      ContactAddress[]        @relation("ContactAddressUpdatedBy")
+  contactPersonCreated         ContactPerson[]         @relation("ContactPersonCreatedBy")
+  contactPersonUpdated         ContactPerson[]         @relation("ContactPersonUpdatedBy")
+  countryCreated               Country[]               @relation("CountryCreatedBy")
+  countryUpdated               Country[]               @relation("CountryUpdatedBy")
+  departmentCreated            Department[]            @relation("DepartmentCreatedBy")
+  departmentUpdated            Department[]            @relation("DepartmentUpdatedBy")
+  eInvoiceTypeCreated          EInvoiceType[]          @relation("EInvoiceTypeCreatedBy")
+  eInvoiceTypeUpdated          EInvoiceType[]          @relation("EInvoiceTypeUpdatedBy")
+  invoicesCreated              Invoice[]               @relation("InvoiceCreatedBy")
+  invoicesUpdated              Invoice[]               @relation("InvoiceUpdatedBy")
+  invoiceCreditNoteCreated     InvoiceCreditNote[]     @relation("InvoiceCreditNoteCreatedBy")
+  invoiceCreditNoteUpdated     InvoiceCreditNote[]     @relation("InvoiceCreditNoteUpdatedBy")
+  invoiceCreditNoteLineCreated InvoiceCreditNoteLine[] @relation("InvoiceCreditNoteLineCreatedBy")
+  invoiceCreditNoteLineUpdated InvoiceCreditNoteLine[] @relation("InvoiceCreditNoteLineUpdatedBy")
+  invoiceLineCreated           InvoiceLine[]           @relation("InvoiceLineCreatedBy")
+  invoiceLineUpdated           InvoiceLine[]           @relation("InvoiceLineUpdatedBy")
+  invoicePaymentCreated        InvoicePayment[]        @relation("InvoicePaymentCreatedBy")
+  invoicePaymentUpdated        InvoicePayment[]        @relation("InvoicePaymentUpdatedBy")
+  invoiceRefundCreated         InvoiceRefund[]         @relation("InvoiceRefundCreatedBy")
+  invoiceRefundUpdated         InvoiceRefund[]         @relation("InvoiceRefundUpdatedBy")
+  journalCreated               Journal[]               @relation("JournalCreatedBy")
+  journalUpdated               Journal[]               @relation("JournalUpdatedBy")
+  journalEntriesCreated        JournalEntry[]          @relation("JournalEntryCreatedBy")
+  journalEntriesUpdated        JournalEntry[]          @relation("JournalEntryUpdatedBy")
+  journalEntryLineCreated      JournalEntryLine[]      @relation("JournalEntryLineCreatedBy")
+  journalEntryLineUpdated      JournalEntryLine[]      @relation("JournalEntryLineUpdatedBy")
+  notificationCreated          Notification[]          @relation("NotificationCreatedBy")
+  notificationUpdated          Notification[]          @relation("NotificationUpdatedBy")
+  paymentMethodCreated         PaymentMethod[]         @relation("PaymentMethodCreatedBy")
+  paymentMethodUpdated         PaymentMethod[]         @relation("PaymentMethodUpdatedBy")
+  paymentTermCreatedBy         PaymentTerm[]           @relation("PaymentTermCreatedBy")
+  paymentTermUpdatedBy         PaymentTerm[]           @relation("PaymentTermUpdatedBy")
+  productsCreated              Product[]               @relation("ProductCreatedBy")
+  productsUpdated              Product[]               @relation("ProductUpdatedBy")
+  productCategoryCreated       ProductCategory[]       @relation("ProductCategoryCreatedBy")
+  productCategoryUpdated       ProductCategory[]       @relation("ProductCategoryUpdatedBy")
+  recurringInvoiceCreated      RecurringInvoice[]      @relation("RecurringInvoiceCreatedBy")
+  recurringInvoiceUpdated      RecurringInvoice[]      @relation("RecurringInvoiceUpdatedBy")
+  roleCreatedBy                Role[]                  @relation("RoleCreatedBy")
+  roleUpdatedBy                Role[]                  @relation("RoleUpdatedBy")
+  settingCreated               Setting[]               @relation("SettingCreatedBy")
+  settingUpdated               Setting[]               @relation("SettingUpdatedBy")
+  stateCreated                 State[]                 @relation("StateCreatedBy")
+  stateUpdated                 State[]                 @relation("StateUpdatedBy")
+  taxCodeCreated               TaxCode[]               @relation("TaxCodeCreatedBy")
+  taxCodeUpdated               TaxCode[]               @relation("TaxCodeUpdatedBy")
+  taxableTypeCreated           TaxableType[]           @relation("TaxableTypeCreatedBy")
+  taxableTypeUpdated           TaxableType[]           @relation("TaxableTypeUpdatedBy")
+  unitTypeCreated              UnitType[]              @relation("UnitTypeCreatedBy")
+  unitTypeUpdated              UnitType[]              @relation("UnitTypeUpdatedBy")
+
+  // Sales & Purchase Relations
+  salesQuotesCreated    SalesQuote[]          @relation("SalesQuoteCreatedBy")
+  salesQuotesUpdated    SalesQuote[]          @relation("SalesQuoteUpdatedBy")
+  salesOrdersCreated    SalesOrder[]          @relation("SalesOrderCreatedBy")
+  salesOrdersUpdated    SalesOrder[]          @relation("SalesOrderUpdatedBy")
+  deliveryOrderCreated  DeliveryOrder[]       @relation("DeliveryOrderCreatedBy")
+  deliveryOrderUpdated  DeliveryOrder[]       @relation("DeliveryOrderUpdatedBy")
+  purchaseRequester     PurchaseRequisition[] @relation("PurchaseRequester")
+  purchaseReqCreated    PurchaseRequisition[] @relation("PurchaseReqCreatedBy")
+  purchaseReqUpdated    PurchaseRequisition[] @relation("PurchaseReqUpdatedBy")
+  purchaseOrderCreated  PurchaseOrder[]       @relation("PurchaseOrderCreatedBy")
+  purchaseOrderUpdated  PurchaseOrder[]       @relation("PurchaseOrderUpdatedBy")
+  goodsReceivedCreated  GoodsReceivedNote[]   @relation("GoodsReceivedCreatedBy")
+  goodsReceivedUpdated  GoodsReceivedNote[]   @relation("GoodsReceivedUpdatedBy")
+  warehouseCreated      Warehouse[]           @relation("WarehouseCreatedBy")
+  warehouseUpdated      Warehouse[]           @relation("WarehouseUpdatedBy")
+
+  bankStatementsCreated             BankStatement[]              @relation("BankStatementCreatedBy")
+  bankStatementsUpdated             BankStatement[]              @relation("BankStatementUpdatedBy")
+  bankTransactionLineMatchedCreated BankTransactionLineMatched[] @relation("BankTransactionLineMatchedCreatedBy")
+
+  @@map("users")
+}
+
+// --- Sales & Purchase Models ---
+
+model SalesQuote {
+  id              BigInt                @id @default(autoincrement())
+  number          String                @unique
+  date            DateTime
+  expiryDate      DateTime?             @map("expiry_date")
+  contactId       BigInt                @map("contact_id")
+  currency        String
+  subtotal        Decimal
+  tax             Decimal               @default(0)
+  discount        Decimal               @default(0)
+  total           Decimal
+  status          TransactionStatusType @default(DRAFT)
+  notes           String?
+  terms           String?
+  billingAddress  String?
+  shippingAddress String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  contact       Contact          @relation("SalesQuoteContact", fields: [contactId], references: [id])
+  quoteLines    SalesQuoteLine[]
+  createdByUser User?            @relation("SalesQuoteCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?            @relation("SalesQuoteUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("sales_quotes")
+}
+
+model SalesQuoteLine {
+  id                 BigInt  @id @default(autoincrement())
+  salesQuoteId       BigInt
+  productId          BigInt?
+  productName        String
+  description        String?
+  classificationCode String?
+  msicCode           String?
+  msicDescription    String?
+  quantity           Decimal @db.Decimal(19, 4)
+  unitPrice          Decimal @map("unitPrice") @db.Decimal(19, 4)
+  discount           Decimal @default(0)
+  tax                Decimal @default(0)
+  total              Decimal
+
+  salesQuote SalesQuote @relation(fields: [salesQuoteId], references: [id])
+  product    Product?   @relation(fields: [productId], references: [id])
+
+  @@map("sales_quote_lines")
+}
+
+model SalesOrder {
+  id              BigInt                @id @default(autoincrement())
+  number          String                @unique
+  date            DateTime
+  expectedDate    DateTime?             @map("expected_date")
+  contactId       BigInt                @map("contact_id")
+  currency        String
+  subtotal        Decimal
+  tax             Decimal               @default(0)
+  discount        Decimal               @default(0)
+  total           Decimal
+  status          TransactionStatusType @default(DRAFT)
+  notes           String?
+  terms           String?
+  billingAddress  String?
+  shippingAddress String?
+  quoteId         BigInt?               @unique
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  contact        Contact          @relation("SalesOrderContact", fields: [contactId], references: [id])
+  orderLines     SalesOrderLine[]
+  deliveryOrders DeliveryOrder[]
+  createdByUser  User?            @relation("SalesOrderCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser  User?            @relation("SalesOrderUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("sales_orders")
+}
+
+model SalesOrderLine {
+  id                 BigInt  @id @default(autoincrement())
+  salesOrderId       BigInt
+  productId          BigInt?
+  productName        String
+  description        String?
+  classificationCode String?
+  msicCode           String?
+  msicDescription    String?
+  quantity           Decimal @db.Decimal(19, 4)
+  deliveredQuantity  Decimal @default(0) @map("delivered_quantity") @db.Decimal(19, 4)
+  unitPrice          Decimal @map("unitPrice") @db.Decimal(19, 4)
+  discount           Decimal @default(0)
+  tax                Decimal @default(0)
+  total              Decimal
+
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id])
+  product    Product?   @relation(fields: [productId], references: [id])
+
+  @@map("sales_order_lines")
+}
+
+model DeliveryOrder {
+  id              BigInt                @id @default(autoincrement())
+  number          String                @unique
+  date            DateTime
+  salesOrderId    BigInt?
+  contactId       BigInt                @map("contact_id")
+  carrier         String?
+  trackingNumber  String?               @map("tracking_number")
+  status          TransactionStatusType @default(DRAFT)
+  notes           String?
+  shippingAddress String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  salesOrder     SalesOrder?         @relation(fields: [salesOrderId], references: [id])
+  contact        Contact             @relation("DeliveryOrderContact", fields: [contactId], references: [id])
+  deliveryLines  DeliveryOrderLine[]
+  stockMovements StockMovement[]
+  createdByUser  User?               @relation("DeliveryOrderCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser  User?               @relation("DeliveryOrderUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("delivery_orders")
+}
+
+model DeliveryOrderLine {
+  id               BigInt  @id @default(autoincrement())
+  deliveryOrderId  BigInt
+  salesOrderLineId BigInt?
+  productId        BigInt
+  productName      String
+  quantity         Decimal @db.Decimal(19, 4)
+  warehouseId      BigInt?
+
+  deliveryOrder DeliveryOrder @relation(fields: [deliveryOrderId], references: [id])
+  product       Product       @relation(fields: [productId], references: [id])
+  warehouse     Warehouse?    @relation(fields: [warehouseId], references: [id])
+
+  @@map("delivery_order_lines")
+}
+
+model PurchaseRequisition {
+  id           BigInt                @id @default(autoincrement())
+  number       String                @unique
+  date         DateTime
+  priority     String                @default("MEDIUM")
+  departmentId BigInt?
+  status       TransactionStatusType @default(DRAFT)
+  notes        String?
+  requestedBy  BigInt
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  requester      User                      @relation("PurchaseRequester", fields: [requestedBy], references: [id])
+  department     Department?               @relation(fields: [departmentId], references: [id])
+  reqLines       PurchaseRequisitionLine[]
+  purchaseOrders PurchaseOrder[]
+  createdByUser  User?                     @relation("PurchaseReqCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser  User?                     @relation("PurchaseReqUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("purchase_requisitions")
+}
+
+model PurchaseRequisitionLine {
+  id                    BigInt  @id @default(autoincrement())
+  purchaseRequisitionId BigInt
+  productId             BigInt?
+  productName           String
+  description           String?
+  quantity              Decimal @db.Decimal(19, 4)
+  estimatedUnitPrice    Decimal @default(0) @map("estimated_unitPrice") @db.Decimal(19, 4)
+
+  purchaseRequisition PurchaseRequisition @relation(fields: [purchaseRequisitionId], references: [id])
+  product             Product?            @relation(fields: [productId], references: [id])
+
+  @@map("purchase_requisition_lines")
+}
+
+model PurchaseOrder {
+  id            BigInt                @id @default(autoincrement())
+  number        String                @unique
+  date          DateTime
+  expectedDate  DateTime?             @map("expected_date")
+  contactId     BigInt                @map("contact_id")
+  currency      String
+  subtotal      Decimal
+  tax           Decimal               @default(0)
+  discount      Decimal               @default(0)
+  total         Decimal
+  status        TransactionStatusType @default(DRAFT)
+  notes         String?
+  terms         String?
+  requisitionId BigInt?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  contact       Contact              @relation("PurchaseOrderContact", fields: [contactId], references: [id])
+  requisition   PurchaseRequisition? @relation(fields: [requisitionId], references: [id])
+  orderLines    PurchaseOrderLine[]
+  receipts      GoodsReceivedNote[]
+  createdByUser User?                @relation("PurchaseOrderCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User?                @relation("PurchaseOrderUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderLine {
+  id               BigInt  @id @default(autoincrement())
+  purchaseOrderId  BigInt
+  productId        BigInt?
+  productName      String
+  description      String?
+  quantity         Decimal @db.Decimal(19, 4)
+  receivedQuantity Decimal @default(0) @map("received_quantity") @db.Decimal(19, 4)
+  unitPrice        Decimal @map("unitPrice") @db.Decimal(19, 4)
+  discount         Decimal @default(0)
+  tax              Decimal @default(0)
+  total            Decimal
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  product       Product?      @relation(fields: [productId], references: [id])
+
+  @@map("purchase_order_lines")
+}
+
+model GoodsReceivedNote {
+  id              BigInt                @id @default(autoincrement())
+  number          String                @unique
+  date            DateTime
+  purchaseOrderId BigInt?
+  contactId       BigInt                @map("contact_id")
+  status          TransactionStatusType @default(DRAFT)
+  notes           String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  purchaseOrder  PurchaseOrder?          @relation(fields: [purchaseOrderId], references: [id])
+  contact        Contact                 @relation("GoodsReceivedContact", fields: [contactId], references: [id])
+  receiptLines   GoodsReceivedNoteLine[]
+  stockMovements StockMovement[]
+  createdByUser  User?                   @relation("GoodsReceivedCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser  User?                   @relation("GoodsReceivedUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("goods_received_notes")
+}
+
+model GoodsReceivedNoteLine {
+  id                  BigInt  @id @default(autoincrement())
+  grnId               BigInt
+  purchaseOrderLineId BigInt?
+  productId           BigInt
+  productName         String
+  quantity            Decimal @db.Decimal(19, 4)
+  warehouseId         BigInt?
+
+  goodsReceivedNote GoodsReceivedNote @relation(fields: [grnId], references: [id])
+  product           Product           @relation(fields: [productId], references: [id])
+  warehouse         Warehouse?        @relation(fields: [warehouseId], references: [id])
+
+  @@map("goods_received_note_lines")
+}
+
+// --- Inventory & Logistics Models ---
+
+model Warehouse {
+  id          BigInt  @id @default(autoincrement())
+  name        String
+  code        String  @unique
+  location    String?
+  description String?
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy BigInt?  @map("created_by")
+  updatedBy BigInt?  @map("updated_by")
+
+  inventory          WarehouseInventory[]
+  stockMovementsFrom StockMovement[]         @relation("FromWarehouse")
+  stockMovementsTo   StockMovement[]         @relation("ToWarehouse")
+  deliveryOrderLines DeliveryOrderLine[]
+  grnLines           GoodsReceivedNoteLine[]
+  createdByUser      User?                   @relation("WarehouseCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser      User?                   @relation("WarehouseUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("warehouses")
+}
+
+model WarehouseInventory {
+  id          BigInt  @id @default(autoincrement())
+  warehouseId BigInt
+  productId   BigInt
+  quantity    Decimal @default(0) @db.Decimal(19, 4)
+
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id])
+  product   Product   @relation(fields: [productId], references: [id])
+
+  @@unique([warehouseId, productId])
+  @@map("warehouse_inventory")
+}
+
+model StockMovement {
+  id              BigInt          @id @default(autoincrement())
+  productId       BigInt
+  fromWarehouseId BigInt?
+  toWarehouseId   BigInt?
+  type            TransactionType
+  quantity        Decimal         @db.Decimal(19, 4)
+  date            DateTime        @default(now())
+  referenceId     BigInt?
+  notes           String?
+
+  product       Product            @relation(fields: [productId], references: [id])
+  fromWarehouse Warehouse?         @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
+  toWarehouse   Warehouse?         @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
+  deliveryOrder DeliveryOrder?     @relation(fields: [referenceId], references: [id], map: "stock_movement_delivery_order_fk")
+  grn           GoodsReceivedNote? @relation(fields: [referenceId], references: [id], map: "stock_movement_grn_fk")
+
+  @@map("stock_movements")
+}

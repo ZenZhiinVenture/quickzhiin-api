@@ -1,0 +1,30 @@
+import { PrismaClient, Asset } from 'zenzhiin/tenant-client';
+
+export default async function upsertAsset(
+  userId: number,
+  id: number | undefined,
+  data: Asset,
+  prismaClient: PrismaClient
+) {
+  try {
+    const now = new Date();
+    return await prismaClient.asset.upsert({
+      where: {
+        id: id,
+      },
+      create: {
+        ...data,
+        createdAt: now,
+        createdBy: userId,
+        updatedAt: now,
+        updatedBy: userId,
+      },
+      update: {
+        updatedAt: now,
+        updatedBy: userId,
+      },
+    });
+  } catch (err) {
+    throw err;
+  }
+}
