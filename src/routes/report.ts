@@ -6,6 +6,7 @@ import { getAgedPayables } from '../controllers/accounting/reports/aged-payables
 import { getInventorySummary } from '../controllers/accounting/reports/inventory-summary';
 import { getInventoryByLocation } from '../controllers/accounting/reports/inventory-by-location';
 import { getInventoryDetail } from '../controllers/accounting/reports/inventory-detail';
+import { getSST02Report } from '../controllers/accounting/reports/sst-02';
 
 const router = Router();
 
@@ -37,5 +38,8 @@ router.get('/inventory-by-location', getInventoryByLocation);
 
 // GET /api/report/inventory-detail
 router.get('/inventory-detail', getInventoryDetail);
+
+// GET /api/report/sst-02
+router.get('/sst-02', getSST02Report);
 
 export default router;

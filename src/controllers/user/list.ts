@@ -29,7 +29,7 @@ export default async function getUserList(req: Request, res: Response, next: Nex
       orderBy: { id: 'asc' },
     });
 
-    const users = accessList.map(a => ({
+    const users = accessList.map((a: any) => ({
       ...a.user,
       id: a.user.id.toString(),
       role: a.role,

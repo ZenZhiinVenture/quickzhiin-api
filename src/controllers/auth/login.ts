@@ -41,7 +41,7 @@ export default async function login(req: Request, res: Response, next: NextFunct
     }
 
     // 3. Build tenant access list for JWT
-    const tenantAccess = user.tenantAccess.map(access => ({
+    const tenantAccess = user.tenantAccess.map((access: any) => ({
       tenantCode: access.tenant.code,
       tenantId: Number(access.tenant.id),
       role: access.role,
