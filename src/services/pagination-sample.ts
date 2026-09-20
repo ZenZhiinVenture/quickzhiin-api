@@ -2,7 +2,7 @@
 import { getPaginationParams } from '../utils/pagination';
 import { formatPaginatedResult } from '../helpers/formatPaginatedResult';
 import { PaginatedResult } from '../types/pagination';
-import { User } from '@prisma/central-client';
+type User = any;
 import { centralPrisma } from './prisma/prismaClient';
 
 export async function getPaginatedUsers(

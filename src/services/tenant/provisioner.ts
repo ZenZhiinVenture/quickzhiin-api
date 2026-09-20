@@ -91,13 +91,18 @@ export const tenantProvisionerService = {
         }
       });
 
-      const user = await tenantDb.user.create({
+      const user = await centralPrisma.user.create({
         data: {
           email: adminEmail,
           passwordHash: hashedPassword,
           firstName: 'Admin',
           lastName: 'User',
-          roleId: adminRole.id
+          tenantAccess: {
+            create: {
+              tenantId: tenant.id,
+              role: 'OWNER'
+            }
+          }
         }
       });
       logger.info(`Admin user created for tenant ${companyCode}: ${user.email}`);
