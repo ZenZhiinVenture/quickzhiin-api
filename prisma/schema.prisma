@@ -389,6 +389,8 @@ model Bill {
   total           Decimal
   status          TransactionStatusType @default(DRAFT)
   notes           String?
+  paymentTerms    String?
+  dueDate         DateTime?
   billingAddress  String?
   shippingAddress String?
 
