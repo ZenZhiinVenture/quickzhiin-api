@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { tenantProvisionerService } from '../../../services/tenant/provisioner';
-import logger from '../../../utils/logger';
+import { tenantProvisionerService } from '../../services/tenant/provisioner';
+import logger from '../../utils/logger';
 
 export const provisionTenant = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -17,7 +17,7 @@ export const provisionTenant = async (req: Request, res: Response, next: NextFun
       adminPassword
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       status: 'success',
       data: {
         tenantId: tenant.id.toString(),
@@ -27,6 +27,6 @@ export const provisionTenant = async (req: Request, res: Response, next: NextFun
     });
   } catch (error: any) {
     logger.error('Error provisioning tenant:', error);
-    res.status(500).json({ message: error.message || 'Failed to provision tenant' });
+    return res.status(500).json({ message: error.message || 'Failed to provision tenant' });
   }
 };

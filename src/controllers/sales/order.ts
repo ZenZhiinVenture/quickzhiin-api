@@ -5,7 +5,7 @@ import { TransactionStatusType } from '@prisma/client';
 import logger from '../../utils/logger';
 
 // --- Sales Order Controllers ---
-import { prisma } from '../../prisma/prismaClient';
+import { prisma } from '../../services/prisma/prismaClient';
 
 export const getSalesActivityLogs = async (req: Request, res: Response, next: NextFunction) => {
   try {

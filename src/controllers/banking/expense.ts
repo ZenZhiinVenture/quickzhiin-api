@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../../prisma/prismaClient';
+import { prisma } from '../../services/prisma/prismaClient';
 import { BankTransactionType, BankTransactionStatus } from '@prisma/client';
 import logger from '../../utils/logger';
 

@@ -14,9 +14,7 @@ export const lhdnApiService = {
       where: { id: invoiceId },
       include: {
         contact: true,
-        invoiceLines: {
-          include: { product: true }
-        }
+        invoiceLines: true
       }
     });
 

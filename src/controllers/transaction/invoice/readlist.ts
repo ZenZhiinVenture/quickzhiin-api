@@ -28,12 +28,12 @@ export default async function getInvoiceList(req: Request, res: Response) {
     const invoices = await paginatedQuery(prisma.invoice, req, select);
 
     // Map through the results to inject the `isDeletable` flag for the frontend UI
-    if (invoices.data && Array.isArray(invoices.data)) {
-      invoices.data = invoices.data.map((invoice: any) => ({
+    if (invoices.items && Array.isArray(invoices.items)) {
+      invoices.items = invoices.items.map((invoice: any) => ({
         ...invoice,
-        isDeletable: 
-          invoice.status === 'DRAFT' && 
-          invoice._count?.invoicePayments === 0 && 
+        isDeletable:
+          invoice.status === 'DRAFT' &&
+          invoice._count?.invoicePayments === 0 &&
           invoice._count?.invoiceCreditNote === 0
       }));
     }

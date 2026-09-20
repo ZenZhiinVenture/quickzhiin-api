@@ -11,14 +11,14 @@ export const submitLhdnInvoice = async (req: Request, res: Response, next: NextF
 
     const result = await lhdnApiService.submitInvoice(BigInt(id));
     
-    res.status(200).json({
+    return res.status(200).json({
       status: 'success',
       message: 'Invoice successfully submitted to LHDN.',
       data: result,
     });
   } catch (error: any) {
     logger.error('Error in submitLhdnInvoice controller:', error);
-    res.status(500).json({ message: error.message || 'Failed to submit invoice to LHDN' });
+    return res.status(500).json({ message: error.message || 'Failed to submit invoice to LHDN' });
   }
 };
 
@@ -31,12 +31,12 @@ export const getLhdnInvoiceStatus = async (req: Request, res: Response, next: Ne
 
     const result = await lhdnApiService.getDocumentStatus(BigInt(id));
     
-    res.status(200).json({
+    return res.status(200).json({
       status: 'success',
       data: result,
     });
   } catch (error: any) {
     logger.error('Error in getLhdnInvoiceStatus controller:', error);
-    res.status(500).json({ message: error.message || 'Failed to get LHDN invoice status' });
+    return res.status(500).json({ message: error.message || 'Failed to get LHDN invoice status' });
   }
 };
