@@ -37,27 +37,29 @@ export const reportingService = {
       include: { account: true }
     });
 
-    // 3. Aggregate Revenue
-    const revenueMap: Record<string, { code: string; name: string; amount: number }> = {};
+    const revenueMap: Record<string, { id: string; code: string; name: string; total: number }> = {};
+    const expenseMap: Record<string, { id: string; code: string; name: string; total: number }> = {};
+
     let totalRevenue = 0;
+    let totalExpenses = 0;
+
+    // 3. Aggregate Revenue
     revenueLines.forEach((line: any) => {
-        const amount = Number(line.credit) - Number(line.debit);
+        const amount = Number(line.credit) - Number(line.debit); // Revenue normal is credit
         if (!revenueMap[line.account.code]) {
-            revenueMap[line.account.code] = { code: line.account.code, name: line.account.name, amount: 0 };
+            revenueMap[line.account.code] = { id: line.account.id, code: line.account.code, name: line.account.name, total: 0 };
         }
-        revenueMap[line.account.code].amount += amount;
+        revenueMap[line.account.code].total += amount;
         totalRevenue += amount;
     });
 
     // 4. Aggregate Expenses
-    const expenseMap: Record<string, { code: string; name: string; amount: number }> = {};
-    let totalExpenses = 0;
     expenseLines.forEach((line: any) => {
-        const amount = Number(line.debit) - Number(line.credit);
+        const amount = Number(line.debit) - Number(line.credit); // Expense normal is debit
         if (!expenseMap[line.account.code]) {
-            expenseMap[line.account.code] = { code: line.account.code, name: line.account.name, amount: 0 };
+            expenseMap[line.account.code] = { id: line.account.id, code: line.account.code, name: line.account.name, total: 0 };
         }
-        expenseMap[line.account.code].amount += amount;
+        expenseMap[line.account.code].total += amount;
         totalExpenses += amount;
     });
 
@@ -91,9 +93,9 @@ export const reportingService = {
     });
 
     // 2. Aggregate by Type
-    const assets: Record<string, { code: string; name: string; amount: number }> = {};
-    const liabilities: Record<string, { code: string; name: string; amount: number }> = {};
-    const equity: Record<string, { code: string; name: string; amount: number }> = {};
+    const assets: Record<string, { id: string; code: string; name: string; total: number }> = {};
+    const liabilities: Record<string, { id: string; code: string; name: string; total: number }> = {};
+    const equity: Record<string, { id: string; code: string; name: string; total: number }> = {};
 
     let totalAssets = 0;
     let totalLiabilities = 0;
@@ -103,21 +105,22 @@ export const reportingService = {
         const type = line.account.type;
         const code = line.account.code;
         const name = line.account.name;
+        const id = line.account.id;
 
         if (type === 'ASSET') {
             const val = Number(line.debit) - Number(line.credit);
-            if (!assets[code]) assets[code] = { code, name, amount: 0 };
-            assets[code].amount += val;
+            if (!assets[code]) assets[code] = { id, code, name, total: 0 };
+            assets[code].total += val;
             totalAssets += val;
         } else if (type === 'LIABILITY') {
             const val = Number(line.credit) - Number(line.debit);
-            if (!liabilities[code]) liabilities[code] = { code, name, amount: 0 };
-            liabilities[code].amount += val;
+            if (!liabilities[code]) liabilities[code] = { id, code, name, total: 0 };
+            liabilities[code].total += val;
             totalLiabilities += val;
         } else if (type === 'EQUITY') {
             const val = Number(line.credit) - Number(line.debit);
-            if (!equity[code]) equity[code] = { code, name, amount: 0 };
-            equity[code].amount += val;
+            if (!equity[code]) equity[code] = { id, code, name, total: 0 };
+            equity[code].total += val;
             totalEquity += val;
         }
     });
@@ -133,11 +136,11 @@ export const reportingService = {
       assets: Object.values(assets),
       liabilities: Object.values(liabilities),
       equity: Object.values(equity),
-      currentYearEarnings: pl.netProfit,
+      netIncome: pl.netProfit,
       totalAssets,
       totalLiabilities,
       totalEquity,
-      isBalanced: Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01,
+      balanceCheck: Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01,
       date
     };
   },
