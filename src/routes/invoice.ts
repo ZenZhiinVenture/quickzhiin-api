@@ -8,6 +8,7 @@ import {
   deleteInvoice,
   getInvoicePdf,
   sendInvoiceEmail,
+  batchOperations,
 } from '../controllers/transaction/invoice';
 
 const router = Router();
@@ -28,6 +29,9 @@ router.post('/', createInvoice);
 
 // POST /api/invoice/:id/send - Send invoice email
 router.post('/:id/send', sendInvoiceEmail);
+
+// POST /api/invoice/batch - Perform batch operations
+router.post('/batch', batchOperations);
 
 // PUT /api/invoice/:id - Update an invoice
 router.put('/:id', updateInvoice);

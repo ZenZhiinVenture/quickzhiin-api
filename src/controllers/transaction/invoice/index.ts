@@ -5,5 +5,6 @@ import getInvoiceList from './readlist';
 import updateInvoice from './update';
 import getInvoicePdf from './pdf';
 import sendInvoiceEmail from './send';
+import batchOperations from './batch';
 
-export { createInvoice, deleteInvoice, getInvoiceDetails, getInvoiceList, updateInvoice, getInvoicePdf, sendInvoiceEmail };
+export { createInvoice, deleteInvoice, getInvoiceDetails, getInvoiceList, updateInvoice, getInvoicePdf, sendInvoiceEmail, batchOperations };
