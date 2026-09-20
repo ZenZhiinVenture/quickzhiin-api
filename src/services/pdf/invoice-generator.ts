@@ -124,7 +124,7 @@ export const pdfGeneratorService = {
         });
 
         const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
+        await page.setContent(html, { waitUntil: 'load' });
         const pdfBuffer = await page.pdf({
             format: 'A4',
             printBackground: true,

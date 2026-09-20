@@ -49,7 +49,7 @@ export async function generateInvoicePdf(invoice: InvoiceData): Promise<Buffer> 
   // 3. Launch Puppeteer and generate PDF
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: 'networkidle0' });
+  await page.setContent(html, { waitUntil: 'load' });
   const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
   await browser.close();
 

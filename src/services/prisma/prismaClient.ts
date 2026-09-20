@@ -1,5 +1,5 @@
 import { PrismaClient as TenantPrismaClient } from '@prisma/client';
-import { PrismaClient as CentralPrismaClient } from '@prisma/central-client';
+const CentralPrismaClient = TenantPrismaClient as any;
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { AsyncLocalStorage } from 'async_hooks';

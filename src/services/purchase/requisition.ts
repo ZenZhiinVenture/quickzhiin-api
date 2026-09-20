@@ -55,7 +55,6 @@ export const purchaseRequisitionService = {
         },
         include: {
           reqLines: true,
-          requester: true,
         },
       });
     });
@@ -68,7 +67,6 @@ export const purchaseRequisitionService = {
     return await prisma.purchaseRequisition.findMany({
       orderBy: { date: 'desc' },
       include: {
-        requester: true,
         reqLines: true,
         department: true
       }

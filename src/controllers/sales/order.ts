@@ -24,9 +24,6 @@ export const getSalesActivityLogs = async (req: Request, res: Response, next: Ne
       },
       orderBy: { createdAt: 'desc' },
       take: 50,
-      include: {
-        user: { select: { firstName: true, lastName: true } }
-      }
     });
 
     res.status(200).json({ status: 'success', data: { items: logs } });
