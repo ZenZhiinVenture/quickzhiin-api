@@ -50,7 +50,6 @@ app.get(`${apiPrefix}/health`, (_req: Request, res: Response) => {
 
 import { requireTenant } from './middlewares/tenant';
 
-import lhdnRoutes from './routes/lhdn';
 
 app.use(`${apiPrefix}/auth`, authRoutes);
 app.use(`${apiPrefix}/admin`, adminRoutes);
@@ -67,7 +66,6 @@ app.use(`${apiPrefix}/trade`, requireTenant, tradeRoutes);
 app.use(`${apiPrefix}/user`, requireTenant, userRoutes);
 app.use(`${apiPrefix}/bank-account`, requireTenant, bankAccountRoutes);
 app.use(`${apiPrefix}/role`, requireTenant, roleRoutes);
-app.use(`${apiPrefix}/lhdn`, requireTenant, lhdnRoutes);
 app.use(`${apiPrefix}/banking`, requireTenant, bankingRoutes);
 
 app.use((_req: Request, res: Response) => {
