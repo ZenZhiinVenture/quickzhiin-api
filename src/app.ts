@@ -25,6 +25,8 @@ import { errorHandler } from './middlewares/error';
 import { prisma } from './services/prisma/prismaClient';
 import logger from './utils/logger';
 
+import adminRoutes from './routes/admin';
+
 const app: Express = express();
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
@@ -45,20 +47,26 @@ app.get(`${apiPrefix}/health`, (_req: Request, res: Response) => {
   res.status(200).json({ status: 'success', timestamp: new Date().toISOString() });
 });
 
-app.use(`${apiPrefix}/auth`, authRoutes);
-app.use(`${apiPrefix}/contact`, contactRoutes);
-app.use(`${apiPrefix}/product`, productRoutes);
-app.use(`${apiPrefix}/inventory/product`, productRoutes);
-app.use(`${apiPrefix}/invoice`, invoiceRoutes);
-app.use(`${apiPrefix}/bill`, billRoutes);
-app.use(`${apiPrefix}/account`, accountRoutes);
-app.use(`${apiPrefix}/journal-entry`, journalEntryRoutes);
-app.use(`${apiPrefix}/payment`, paymentRoutes);
-app.use(`${apiPrefix}/report`, reportRoutes);
-app.use(`${apiPrefix}/trade`, tradeRoutes);
-app.use(`${apiPrefix}/user`, userRoutes);
-app.use(`${apiPrefix}/bank-account`, bankAccountRoutes);
-app.use(`${apiPrefix}/role`, roleRoutes);
+import { requireTenant } from './middlewares/tenant';
+
+import lhdnRoutes from './routes/lhdn';
+
+app.use(`${apiPrefix}/auth`, requireTenant, authRoutes);
+app.use(`${apiPrefix}/admin`, adminRoutes);
+app.use(`${apiPrefix}/contact`, requireTenant, contactRoutes);
+app.use(`${apiPrefix}/product`, requireTenant, productRoutes);
+app.use(`${apiPrefix}/inventory/product`, requireTenant, productRoutes);
+app.use(`${apiPrefix}/invoice`, requireTenant, invoiceRoutes);
+app.use(`${apiPrefix}/bill`, requireTenant, billRoutes);
+app.use(`${apiPrefix}/account`, requireTenant, accountRoutes);
+app.use(`${apiPrefix}/journal-entry`, requireTenant, journalEntryRoutes);
+app.use(`${apiPrefix}/payment`, requireTenant, paymentRoutes);
+app.use(`${apiPrefix}/report`, requireTenant, reportRoutes);
+app.use(`${apiPrefix}/trade`, requireTenant, tradeRoutes);
+app.use(`${apiPrefix}/user`, requireTenant, userRoutes);
+app.use(`${apiPrefix}/bank-account`, requireTenant, bankAccountRoutes);
+app.use(`${apiPrefix}/role`, requireTenant, roleRoutes);
+app.use(`${apiPrefix}/lhdn`, requireTenant, lhdnRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: 'Not Found' });

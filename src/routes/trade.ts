@@ -10,11 +10,14 @@ import {
   createSalesOrder,
   getSalesOrderList,
   getSalesOrderDetails,
-  createDeliveryOrder
+  createDeliveryOrder,
+  getSalesActivityLogs
 } from '../controllers/sales/order';
 import {
   createPurchaseRequisition,
+  getPurchaseRequisitionList,
   createPurchaseOrder,
+  getPurchaseOrderList,
   createGRN,
   getGRNList
 } from '../controllers/purchase/order';
@@ -40,10 +43,13 @@ router.get('/sales/order/:id', getSalesOrderDetails);
 router.post('/sales/order', createSalesOrder);
 
 router.post('/sales/delivery', createDeliveryOrder);
+router.get('/sales/activity', getSalesActivityLogs);
 
 // --- Purchase Routes ---
 router.post('/purchase/requisition', createPurchaseRequisition);
+router.get('/purchase/requisition', getPurchaseRequisitionList);
 router.post('/purchase/order', createPurchaseOrder);
+router.get('/purchase/order', getPurchaseOrderList);
 router.post('/purchase/grn', createGRN);
 router.get('/purchase/grn', getGRNList);
 

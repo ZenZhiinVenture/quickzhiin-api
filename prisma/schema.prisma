@@ -428,15 +428,15 @@ model Bill {
 }
 
 model BillCreditNote {
-  id         BigInt                @id @default(autoincrement())
-  number     String                @unique
-  date       DateTime
-  billId     BigInt?               @unique
-  contactId  BigInt                @map("contact_id")
-  amount     Decimal
-  reason     String
-  status     TransactionStatusType @default(DRAFT)
-  currency   String
+  id        BigInt                @id @default(autoincrement())
+  number    String                @unique
+  date      DateTime
+  billId    BigInt?               @unique
+  contactId BigInt                @map("contact_id")
+  amount    Decimal
+  reason    String
+  status    TransactionStatusType @default(DRAFT)
+  currency  String
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -459,7 +459,7 @@ model BillCreditNoteLine {
   description        String
   classificationCode String
   quantity           BigInt
-  unitPrice         Decimal
+  unitPrice          Decimal
   discount           Decimal
   tax                Decimal
   total              Decimal
@@ -485,7 +485,7 @@ model BillLine {
   description        String
   classificationCode String
   quantity           BigInt
-  unitPrice         Decimal
+  unitPrice          Decimal
   discount           Decimal
   tax                Decimal
   total              Decimal
@@ -613,20 +613,20 @@ model Contact {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  parent           Contact?         @relation("ContactParent", fields: [parentId], references: [id])
-  children         Contact[]        @relation("ContactParent")
-  user             User?            @relation("ContactUser", fields: [userId], references: [id])
-  createdByUser    User?            @relation("ContactCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser    User?            @relation("ContactUpdatedBy", fields: [updatedBy], references: [id])
-  contactAddresses ContactAddress[]
-  contact_persons  ContactPerson[]
-  salesQuotes      SalesQuote[]        @relation("SalesQuoteContact")
-  salesOrders      SalesOrder[]        @relation("SalesOrderContact")
-  deliveryOrders   DeliveryOrder[]     @relation("DeliveryOrderContact")
-  invoices         Invoice[]           @relation("InvoiceContact")
-  bills            Bill[]              @relation("BillContact")
-  purchaseOrders   PurchaseOrder[]     @relation("PurchaseOrderContact")
-  goodsReceived    GoodsReceivedNote[] @relation("GoodsReceivedContact")
+  parent             Contact?            @relation("ContactParent", fields: [parentId], references: [id])
+  children           Contact[]           @relation("ContactParent")
+  user               User?               @relation("ContactUser", fields: [userId], references: [id])
+  createdByUser      User?               @relation("ContactCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser      User?               @relation("ContactUpdatedBy", fields: [updatedBy], references: [id])
+  contactAddresses   ContactAddress[]
+  contact_persons    ContactPerson[]
+  salesQuotes        SalesQuote[]        @relation("SalesQuoteContact")
+  salesOrders        SalesOrder[]        @relation("SalesOrderContact")
+  deliveryOrders     DeliveryOrder[]     @relation("DeliveryOrderContact")
+  invoices           Invoice[]           @relation("InvoiceContact")
+  bills              Bill[]              @relation("BillContact")
+  purchaseOrders     PurchaseOrder[]     @relation("PurchaseOrderContact")
+  goodsReceived      GoodsReceivedNote[] @relation("GoodsReceivedContact")
   invoiceCreditNotes InvoiceCreditNote[] @relation("InvoiceCreditNoteContact")
   billCreditNotes    BillCreditNote[]    @relation("BillCreditNoteContact")
 
@@ -782,6 +782,14 @@ model Invoice {
   billingAddress  String?
   shippingAddress String?
 
+  // LHDN e-Invoice tracking
+  lhdnUuid           String?
+  lhdnLongId         String?
+  lhdnStatus         String? // e.g. Submitted, Valid, Invalid, Cancelled
+  lhdnValidationLink String?
+  lhdnSubmissionDate DateTime?
+  lhdnError          String?
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   createdBy BigInt?  @map("created_by")
@@ -799,15 +807,15 @@ model Invoice {
 }
 
 model InvoiceCreditNote {
-  id         BigInt                @id @default(autoincrement())
-  number     String                @unique
-  date       DateTime
-  invoiceId  BigInt?               @unique
-  contactId  BigInt                @map("contact_id")
-  amount     Decimal
-  reason     String
-  status     TransactionStatusType @default(DRAFT)
-  currency   String
+  id        BigInt                @id @default(autoincrement())
+  number    String                @unique
+  date      DateTime
+  invoiceId BigInt?               @unique
+  contactId BigInt                @map("contact_id")
+  amount    Decimal
+  reason    String
+  status    TransactionStatusType @default(DRAFT)
+  currency  String
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -830,7 +838,7 @@ model InvoiceCreditNoteLine {
   description         String
   classificationCode  String
   quantity            BigInt
-  unitPrice          Decimal
+  unitPrice           Decimal
   discount            Decimal
   tax                 Decimal
   total               Decimal
@@ -850,20 +858,20 @@ model InvoiceCreditNoteLine {
 }
 
 model InvoiceLine {
-  id                 BigInt   @id @default(autoincrement())
-  invoiceId          BigInt   @unique
+  id                 BigInt  @id @default(autoincrement())
+  invoiceId          BigInt  @unique
   productId          BigInt?
   productName        String
   description        String?
   classificationCode String?
   msicCode           String?
   msicDescription    String?
-  quantity           Decimal  @db.Decimal(19, 4)
-  unitPrice         Decimal  @db.Decimal(19, 4)
-  discount           Decimal  @default(0)
-  tax                Decimal  @default(0)
+  quantity           Decimal @db.Decimal(19, 4)
+  unitPrice          Decimal @db.Decimal(19, 4)
+  discount           Decimal @default(0)
+  tax                Decimal @default(0)
   total              Decimal
-  taxId              BigInt?  @unique
+  taxId              BigInt? @unique
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -1407,21 +1415,21 @@ model User {
   unitTypeUpdated              UnitType[]              @relation("UnitTypeUpdatedBy")
 
   // Sales & Purchase Relations
-  salesQuotesCreated    SalesQuote[]          @relation("SalesQuoteCreatedBy")
-  salesQuotesUpdated    SalesQuote[]          @relation("SalesQuoteUpdatedBy")
-  salesOrdersCreated    SalesOrder[]          @relation("SalesOrderCreatedBy")
-  salesOrdersUpdated    SalesOrder[]          @relation("SalesOrderUpdatedBy")
-  deliveryOrderCreated  DeliveryOrder[]       @relation("DeliveryOrderCreatedBy")
-  deliveryOrderUpdated  DeliveryOrder[]       @relation("DeliveryOrderUpdatedBy")
-  purchaseRequester     PurchaseRequisition[] @relation("PurchaseRequester")
-  purchaseReqCreated    PurchaseRequisition[] @relation("PurchaseReqCreatedBy")
-  purchaseReqUpdated    PurchaseRequisition[] @relation("PurchaseReqUpdatedBy")
-  purchaseOrderCreated  PurchaseOrder[]       @relation("PurchaseOrderCreatedBy")
-  purchaseOrderUpdated  PurchaseOrder[]       @relation("PurchaseOrderUpdatedBy")
-  goodsReceivedCreated  GoodsReceivedNote[]   @relation("GoodsReceivedCreatedBy")
-  goodsReceivedUpdated  GoodsReceivedNote[]   @relation("GoodsReceivedUpdatedBy")
-  warehouseCreated      Warehouse[]           @relation("WarehouseCreatedBy")
-  warehouseUpdated      Warehouse[]           @relation("WarehouseUpdatedBy")
+  salesQuotesCreated   SalesQuote[]          @relation("SalesQuoteCreatedBy")
+  salesQuotesUpdated   SalesQuote[]          @relation("SalesQuoteUpdatedBy")
+  salesOrdersCreated   SalesOrder[]          @relation("SalesOrderCreatedBy")
+  salesOrdersUpdated   SalesOrder[]          @relation("SalesOrderUpdatedBy")
+  deliveryOrderCreated DeliveryOrder[]       @relation("DeliveryOrderCreatedBy")
+  deliveryOrderUpdated DeliveryOrder[]       @relation("DeliveryOrderUpdatedBy")
+  purchaseRequester    PurchaseRequisition[] @relation("PurchaseRequester")
+  purchaseReqCreated   PurchaseRequisition[] @relation("PurchaseReqCreatedBy")
+  purchaseReqUpdated   PurchaseRequisition[] @relation("PurchaseReqUpdatedBy")
+  purchaseOrderCreated PurchaseOrder[]       @relation("PurchaseOrderCreatedBy")
+  purchaseOrderUpdated PurchaseOrder[]       @relation("PurchaseOrderUpdatedBy")
+  goodsReceivedCreated GoodsReceivedNote[]   @relation("GoodsReceivedCreatedBy")
+  goodsReceivedUpdated GoodsReceivedNote[]   @relation("GoodsReceivedUpdatedBy")
+  warehouseCreated     Warehouse[]           @relation("WarehouseCreatedBy")
+  warehouseUpdated     Warehouse[]           @relation("WarehouseUpdatedBy")
 
   bankStatementsCreated             BankStatement[]              @relation("BankStatementCreatedBy")
   bankStatementsUpdated             BankStatement[]              @relation("BankStatementUpdatedBy")

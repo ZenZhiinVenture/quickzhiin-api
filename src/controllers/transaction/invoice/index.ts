@@ -3,5 +3,7 @@ import deleteInvoice from './delete';
 import getInvoiceDetails from './read';
 import getInvoiceList from './readlist';
 import updateInvoice from './update';
+import getInvoicePdf from './pdf';
+import sendInvoiceEmail from './send';
 
-export { createInvoice, deleteInvoice, getInvoiceDetails, getInvoiceList, updateInvoice };
+export { createInvoice, deleteInvoice, getInvoiceDetails, getInvoiceList, updateInvoice, getInvoicePdf, sendInvoiceEmail };
