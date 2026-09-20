@@ -58,11 +58,11 @@ export const requireTenant = async (req: Request, res: Response, next: NextFunct
 
     const tenantDb = tenantManager.getClient(tenant.dbUrl);
 
-    tenantContext.run(tenantDb, () => {
+    return tenantContext.run(tenantDb, () => {
       next();
     });
   } catch (error) {
     logger.error('Error resolving tenant database:', error);
-    res.status(500).json({ message: 'Failed to resolve tenant database' });
+    return res.status(500).json({ message: 'Failed to resolve tenant database' });
   }
 };

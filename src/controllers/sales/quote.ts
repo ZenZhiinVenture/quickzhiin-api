@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { salesQuoteService } from '../../services/sales/quote';
-import { prisma } from '../../prisma/prismaClient';
+import { prisma } from '../../services/prisma/prismaClient';
 import { TransactionStatusType } from '@prisma/client';
 import logger from '../../utils/logger';
 

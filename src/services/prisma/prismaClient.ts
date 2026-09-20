@@ -5,8 +5,11 @@ import { Pool } from 'pg';
 import { AsyncLocalStorage } from 'async_hooks';
 
 // 1. Central Database Client
+const centralPool = new Pool({ connectionString: process.env.CENTRAL_DATABASE_URL });
+const centralAdapter = new PrismaPg(centralPool);
+
 export const centralPrisma = new CentralPrismaClient({
-  datasourceUrl: process.env.CENTRAL_DATABASE_URL,
+  adapter: centralAdapter,
   log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
 });
 
@@ -18,7 +21,7 @@ class TenantManager {
   private static instance: TenantManager;
   private clients: Map<string, TenantPrismaClient> = new Map();
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): TenantManager {
     if (!TenantManager.instance) {
@@ -38,12 +41,12 @@ class TenantManager {
 
     const pool = new Pool({ connectionString: dbUrl });
     const adapter = new PrismaPg(pool);
-    
+
     const client = new TenantPrismaClient({
       adapter,
       log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     });
-    
+
     this.clients.set(dbUrl, client);
     return client;
   }
@@ -62,7 +65,7 @@ export const prisma = new Proxy({} as TenantPrismaClient, {
   get(target, prop) {
     const store = tenantContext.getStore();
     const activeClient = store || fallbackClient;
-    
+
     // Bind functions to the correct client instance to preserve 'this' context
     const value = (activeClient as any)[prop];
     if (typeof value === 'function') {

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { purchaseRequisitionService } from '../../services/purchase/requisition';
 import { purchaseOrderService } from '../../services/purchase/order';
 import { goodsReceivedNoteService } from '../../services/purchase/grn';
-import { prisma } from '../../prisma/prismaClient';
+import { prisma } from '../../services/prisma/prismaClient';
 import { TransactionStatusType } from '@prisma/client';
 import logger from '../../utils/logger';
 

@@ -94,7 +94,7 @@ export const tenantProvisionerService = {
       const user = await tenantDb.user.create({
         data: {
           email: adminEmail,
-          password: hashedPassword,
+          passwordHash: hashedPassword,
           firstName: 'Admin',
           lastName: 'User',
           roleId: adminRole.id

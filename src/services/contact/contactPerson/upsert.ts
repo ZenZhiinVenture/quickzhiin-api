@@ -11,7 +11,7 @@ export default async function upsertContactPerson(
     return await Promise.all(
       datas.map(async (data: ContactPerson) => {
         const validateData = contactPersonSchema.parse(data);
-        
+
         // If no ID is provided, it's a new record
         if (!data.id || Number(data.id) === 0) {
           return prisma.contactPerson.create({

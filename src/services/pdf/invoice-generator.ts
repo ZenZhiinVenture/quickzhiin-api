@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 import * as handlebars from 'handlebars';
-import { prisma } from '../../prisma/prismaClient';
+import { prisma } from '../../services/prisma/prismaClient';
 
 const invoiceTemplate = `
 <!DOCTYPE html>
@@ -99,40 +99,40 @@ const invoiceTemplate = `
 `;
 
 export const pdfGeneratorService = {
-  async generateInvoicePdf(invoiceId: bigint): Promise<Buffer> {
-    const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId },
-      include: {
-        contact: true,
-        invoiceLines: true,
-      }
-    });
+    async generateInvoicePdf(invoiceId: bigint): Promise<Buffer> {
+        const invoice = await prisma.invoice.findUnique({
+            where: { id: invoiceId },
+            include: {
+                contact: true,
+                invoiceLines: true,
+            }
+        });
 
-    if (!invoice) {
-      throw new Error('Invoice not found');
+        if (!invoice) {
+            throw new Error('Invoice not found');
+        }
+
+        const template = handlebars.compile(invoiceTemplate);
+        const html = template({
+            invoice,
+            date: invoice.date.toISOString().split('T')[0],
+        });
+
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
+        });
+
+        await browser.close();
+
+        return Buffer.from(pdfBuffer);
     }
-
-    const template = handlebars.compile(invoiceTemplate);
-    const html = template({
-      invoice,
-      date: invoice.date.toISOString().split('T')[0],
-    });
-
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
-    });
-    
-    await browser.close();
-    
-    return Buffer.from(pdfBuffer);
-  }
 };

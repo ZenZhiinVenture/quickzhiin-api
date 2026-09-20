@@ -8,13 +8,13 @@ export const lhdnMapperService = {
     const config = await lhdnAuthService.getConfig();
 
     // 1. Determine Buyer Details (with Fallback to General Public)
-    const isB2B = !!invoice.contact.taxNumber;
-    const buyerTin = invoice.contact.taxNumber || 'EI00000000010';
-    const buyerName = invoice.contact.name || 'General Public';
+    const isB2B = !!invoice.contact.taxNo;
+    const buyerTin = invoice.contact.taxNo || 'EI00000000010';
+    const buyerName = invoice.contact.legalname || 'General Public';
     
     // Default to NA if it's a general public walk-in without a BRN/NRIC
     const buyerIdType = isB2B ? 'BRN' : 'NA';
-    const buyerIdValue = invoice.contact.registrationNumber || 'NA';
+    const buyerIdValue = invoice.contact.regNo || 'NA';
 
     // 2. Map Lines
     const documentLines = invoice.invoiceLines.map((line: any, index: number) => {
@@ -25,7 +25,7 @@ export const lhdnMapperService = {
 
       return {
         lineClassification: '01',
-        itemClassification: line.product?.classificationCode || '001', // Example MSIC/Classification
+        itemClassification: line.classificationCode || '001', // Example MSIC/Classification
         itemDescription: line.productName,
         quantity: parseFloat(line.quantity),
         unitPrice: parseFloat(line.unitPrice),
