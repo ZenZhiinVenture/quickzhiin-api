@@ -17,6 +17,15 @@ export const createPurchaseRequisition = async (req: Request, res: Response, nex
   }
 };
 
+export const getPurchaseRequisitionList = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const requisitions = await purchaseRequisitionService.list();
+    res.status(200).json({ status: 'success', data: { items: requisitions } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // --- Purchase Order Controllers ---
 
 export const createPurchaseOrder = async (req: Request, res: Response, next: NextFunction) => {
@@ -26,6 +35,15 @@ export const createPurchaseOrder = async (req: Request, res: Response, next: Nex
     res.status(201).json({ status: 'success', data: order });
   } catch (error) {
     logger.error('Error creating purchase order:', error);
+    next(error);
+  }
+};
+
+export const getPurchaseOrderList = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const orders = await purchaseOrderService.list();
+    res.status(200).json({ status: 'success', data: { items: orders } });
+  } catch (error) {
     next(error);
   }
 };

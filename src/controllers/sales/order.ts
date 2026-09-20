@@ -4,6 +4,35 @@ import { deliveryOrderService } from '../../services/sales/delivery';
 import logger from '../../utils/logger';
 
 // --- Sales Order Controllers ---
+import { prisma } from '../../prisma/prismaClient';
+
+export const getSalesActivityLogs = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = (req as any).user;
+    const userId = user.id;
+    const roleId = user.roleId;
+
+    // Fetch the role to check if admin
+    const role = await prisma.role.findUnique({ where: { id: BigInt(roleId) } });
+    const isAdmin = role?.name === 'ADMIN';
+
+    const logs = await prisma.auditTrail.findMany({
+      where: {
+        tableName: { in: ['sales_quotes', 'sales_orders', 'invoices', 'delivery_orders'] },
+        ...(isAdmin ? {} : { userId: BigInt(userId) })
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        user: { select: { firstName: true, lastName: true } }
+      }
+    });
+
+    res.status(200).json({ status: 'success', data: { items: logs } });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const createSalesOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {

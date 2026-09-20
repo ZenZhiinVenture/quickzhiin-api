@@ -6,6 +6,8 @@ import {
   getInvoiceDetails,
   updateInvoice,
   deleteInvoice,
+  getInvoicePdf,
+  sendInvoiceEmail,
 } from '../controllers/transaction/invoice';
 
 const router = Router();
@@ -18,8 +20,14 @@ router.get('/', getInvoiceList);
 // GET /api/invoice/:id - Get a single invoice details
 router.get('/:id', getInvoiceDetails);
 
+// GET /api/invoice/:id/pdf - Generate PDF for invoice
+router.get('/:id/pdf', getInvoicePdf);
+
 // POST /api/invoice - Create a new invoice
 router.post('/', createInvoice);
+
+// POST /api/invoice/:id/send - Send invoice email
+router.post('/:id/send', sendInvoiceEmail);
 
 // PUT /api/invoice/:id - Update an invoice
 router.put('/:id', updateInvoice);

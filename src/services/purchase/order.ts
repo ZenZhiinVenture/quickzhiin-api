@@ -99,4 +99,17 @@ export const purchaseOrderService = {
       });
     });
   },
+
+  /**
+   * List purchase orders.
+   */
+  async list() {
+    return await prisma.purchaseOrder.findMany({
+      orderBy: { date: 'desc' },
+      include: {
+        contact: true,
+        orderLines: true
+      }
+    });
+  }
 };

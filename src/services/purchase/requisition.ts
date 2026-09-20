@@ -39,7 +39,7 @@ export const purchaseRequisitionService = {
           priority: data.priority || 'MEDIUM',
           departmentId: data.departmentId,
           notes: data.notes,
-          requestedBy: data.requestedBy,
+          requestedBy: data.requestedBy || createdBy,
           status: TransactionStatusType.DRAFT,
           createdBy,
           updatedBy: createdBy,
@@ -60,4 +60,18 @@ export const purchaseRequisitionService = {
       });
     });
   },
+
+  /**
+   * List purchase requisitions.
+   */
+  async list() {
+    return await prisma.purchaseRequisition.findMany({
+      orderBy: { date: 'desc' },
+      include: {
+        requester: true,
+        reqLines: true,
+        department: true
+      }
+    });
+  }
 };
