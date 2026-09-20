@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
-import { prisma } from '../../services/prisma/prismaClient';
+import { centralPrisma } from '../../services/prisma/prismaClient';
 import { verifyToken } from '../../utils/jwt';
 import { sendEmail } from '../../services/email/email';
+
 /**
  * Handles password reset.
- * Verifies the reset token and updates the user's password.
- * Returns success message upon successful password reset.
- * Note: This should be a separate endpoint from the login route.
+ * Verifies the reset token and updates the user's password in the central database.
  */
 export default async function resetPassword(req: Request, res: Response, next: NextFunction) {
   try {
@@ -15,18 +14,16 @@ export default async function resetPassword(req: Request, res: Response, next: N
 
     // Verify token
     const decoded = verifyToken(token);
-    if (!decoded) {
+    if (!decoded || !decoded.id) {
       return res.status(401).json({
         message: 'Invalid or expired token',
       });
     }
 
-    // Get the core database client
-
-    // Find user
-    const user = await prisma.user.findUnique({
+    // Find user in central DB
+    const user = await centralPrisma.user.findUnique({
       where: {
-        id: decoded.id,
+        id: BigInt(decoded.id),
       },
     });
 
@@ -41,7 +38,7 @@ export default async function resetPassword(req: Request, res: Response, next: N
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     // Update password
-    await prisma.user.update({
+    await centralPrisma.user.update({
       where: { id: user.id },
       data: {
         passwordHash: hashedPassword,

@@ -182,8 +182,6 @@ model Account {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser     User?              @relation("AccountCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser     User?              @relation("AccountUpdatedBy", fields: [updatedBy], references: [id])
   journalEntryLines JournalEntryLine[]
   paymentMethods    PaymentMethod[]
   bankAccount       BankAccount?
@@ -214,8 +212,6 @@ model Asset {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User?     @relation("AssetCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?     @relation("AssetUpdatedBy", fields: [updatedBy], references: [id])
   assetType     AssetType @relation(fields: [assetTypeId], references: [id])
 
   @@map("assets")
@@ -237,8 +233,6 @@ model AssetType {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User?   @relation("AssetTypeCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?   @relation("AssetTypeUpdatedBy", fields: [updatedBy], references: [id])
   assets        Asset[]
 
   @@map("asset_types")
@@ -256,8 +250,6 @@ model AuditContact {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("AuditContactCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("AuditContactUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("audit_contacts")
 }
@@ -274,7 +266,6 @@ model AuditTrail {
   newData   Json?
   createdAt DateTime     @default(now())
 
-  user User @relation("UserAudit", fields: [userId], references: [id])
 
   @@map("audit_trails")
 }
@@ -295,8 +286,6 @@ model BankAccount {
   updatedBy BigInt?  @map("updated_by")
 
   account         Account?             @relation(fields: [accountId], references: [id])
-  createdByUser   User?                @relation("BankAccountCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser   User?                @relation("BankAccountUpdatedBy", fields: [updatedBy], references: [id])
   transactions    BankTransaction[]
   reconciliations BankReconciliation[]
   bankStatements  BankStatement[]
@@ -321,8 +310,6 @@ model BankStatement {
 
   bankAccount   BankAccount       @relation(fields: [bankAccountId], references: [id])
   transactions  BankTransaction[]
-  createdByUser User?             @relation("BankStatementCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?             @relation("BankStatementUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("bank_statements")
 }
@@ -345,8 +332,6 @@ model BankReconciliation {
 
   bankAccount   BankAccount       @relation(fields: [bankAccountId], references: [id])
   transactions  BankTransaction[]
-  createdByUser User?             @relation("BankReconciliationCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?             @relation("BankReconciliationUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("bank_reconciliations")
 }
@@ -372,8 +357,6 @@ model BankTransaction {
   bankAccount    BankAccount                  @relation(fields: [bankAccountId], references: [id])
   bankStatement  BankStatement?               @relation(fields: [bankStatementId], references: [id])
   reconciliation BankReconciliation?          @relation(fields: [reconciliationId], references: [id])
-  createdByUser  User?                        @relation("BankTransactionCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser  User?                        @relation("BankTransactionUpdatedBy", fields: [updatedBy], references: [id])
   matchedLines   BankTransactionLineMatched[]
 
   @@map("bank_transactions")
@@ -390,7 +373,6 @@ model BankTransactionLineMatched {
 
   bankTransaction  BankTransaction  @relation(fields: [bankTransactionId], references: [id])
   journalEntryLine JournalEntryLine @relation(fields: [journalEntryLineId], references: [id])
-  createdByUser    User?            @relation("BankTransactionLineMatchedCreatedBy", fields: [createdBy], references: [id])
 
   @@map("bank_transaction_line_matched")
 }
@@ -421,8 +403,6 @@ model Bill {
   payments       BillPayment[]
   refunds        BillRefund[]
   billCreditNote BillCreditNote?
-  createdByUser  User?           @relation("BillCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser  User?           @relation("BillUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("bills")
 }
@@ -446,8 +426,6 @@ model BillCreditNote {
   bill            Bill?                @relation(fields: [billId], references: [id])
   contact         Contact              @relation("BillCreditNoteContact", fields: [contactId], references: [id])
   creditNoteLines BillCreditNoteLine[]
-  createdByUser   User?                @relation("BillCreditNoteCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser   User?                @relation("BillCreditNoteUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("bill_credit_notes")
 }
@@ -472,8 +450,6 @@ model BillCreditNoteLine {
 
   billCreditNote BillCreditNote @relation(fields: [billCreditNoteId], references: [id])
   taxCode        TaxCode?       @relation("TaxCodeBillCreditNoteLine", fields: [taxId], references: [id], map: "tax_code_bill_credit_note_line_fk")
-  createdByUser  User?          @relation("BillCreditNoteLineCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser  User?          @relation("BillCreditNoteLineUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("bill_credit_note_lines")
 }
@@ -498,8 +474,6 @@ model BillLine {
 
   bill          Bill     @relation(fields: [billId], references: [id])
   taxCode       TaxCode? @relation("TaxCodeBillLine", fields: [taxId], references: [id], map: "tax_code_bill_line_fk")
-  createdByUser User?    @relation("BillLineCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?    @relation("BillLineUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("bill_lines")
 }
@@ -518,8 +492,6 @@ model BillPayment {
 
   bill          Bill          @relation(fields: [billId], references: [id])
   method        PaymentMethod @relation(fields: [methodId], references: [id])
-  createdByUser User?         @relation("BillPaymentCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?         @relation("BillPaymentUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("bill_payments")
 }
@@ -539,8 +511,6 @@ model BillRefund {
 
   bill          Bill          @relation(fields: [billId], references: [id])
   method        PaymentMethod @relation(fields: [methodId], references: [id])
-  createdByUser User?         @relation("BillRefundCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?         @relation("BillRefundUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("bill_refunds")
 }
@@ -558,8 +528,6 @@ model BusinessCode {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("BusinessCodeCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("BusinessCodeUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("business_codes")
 }
@@ -575,8 +543,6 @@ model ClassficationCode {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("ClassficationCodeCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("ClassficationCodeUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("classification_codes")
 }
@@ -615,9 +581,6 @@ model Contact {
 
   parent             Contact?            @relation("ContactParent", fields: [parentId], references: [id])
   children           Contact[]           @relation("ContactParent")
-  user               User?               @relation("ContactUser", fields: [userId], references: [id])
-  createdByUser      User?               @relation("ContactCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser      User?               @relation("ContactUpdatedBy", fields: [updatedBy], references: [id])
   contactAddresses   ContactAddress[]
   contact_persons    ContactPerson[]
   salesQuotes        SalesQuote[]        @relation("SalesQuoteContact")
@@ -656,8 +619,6 @@ model ContactAddress {
   updatedBy BigInt?  @map("updated_by")
 
   contact       Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  createdByUser User?   @relation("ContactAddressCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?   @relation("ContactAddressUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("contact_address")
 }
@@ -677,8 +638,6 @@ model ContactPerson {
   updatedBy BigInt?  @map("updated_by")
 
   contact       Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  createdByUser User?   @relation("ContactPersonCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?   @relation("ContactPersonUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("contact_persons")
 }
@@ -699,8 +658,6 @@ model Country {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("CountryCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("CountryUpdatedBy", fields: [updatedBy], references: [id])
 
   @@unique([code])
   @@unique([currencyCode])
@@ -724,8 +681,6 @@ model Department {
   parent        Department?           @relation("DepartmentHierarchy", fields: [parentId], references: [id])
   children      Department[]          @relation("DepartmentHierarchy")
   purchaseReqs  PurchaseRequisition[]
-  createdByUser User?                 @relation("DepartmentCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?                 @relation("DepartmentUpdatedBy", fields: [updatedBy], references: [id])
 
   @@unique([parentId, name])
   @@map("departments")
@@ -757,8 +712,6 @@ model EInvoiceType {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("EInvoiceTypeCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("EInvoiceTypeUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("einvoice_types")
 }
@@ -800,8 +753,6 @@ model Invoice {
   invoicePayments   InvoicePayment[]
   invoiceRefunds    InvoiceRefund[]
   invoiceCreditNote InvoiceCreditNote?
-  createdByUser     User?              @relation("InvoiceCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser     User?              @relation("InvoiceUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("invoices")
 }
@@ -825,8 +776,6 @@ model InvoiceCreditNote {
   invoice               Invoice?                @relation(fields: [invoiceId], references: [id])
   contact               Contact                 @relation("InvoiceCreditNoteContact", fields: [contactId], references: [id])
   invoiceCreditNoteLine InvoiceCreditNoteLine[]
-  createdByUser         User?                   @relation("InvoiceCreditNoteCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser         User?                   @relation("InvoiceCreditNoteUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("invoice_credit_notes")
 }
@@ -851,8 +800,6 @@ model InvoiceCreditNoteLine {
 
   invoiceCreditNote InvoiceCreditNote @relation(fields: [invoiceCreditNoteId], references: [id])
   taxCode           TaxCode?          @relation("TaxCodeInvoiceCreditNoteLine", fields: [taxId], references: [id], map: "tax_code_invoice_credit_note_line_fk")
-  createdByUser     User?             @relation("InvoiceCreditNoteLineCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser     User?             @relation("InvoiceCreditNoteLineUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("invoice_credit_note_lines")
 }
@@ -880,8 +827,6 @@ model InvoiceLine {
 
   invoice       Invoice  @relation(fields: [invoiceId], references: [id])
   taxCode       TaxCode? @relation("TaxCodeInvoiceLine", fields: [taxId], references: [id], map: "tax_code_invoice_line_fk")
-  createdByUser User?    @relation("InvoiceLineCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?    @relation("InvoiceLineUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("invoice_lines")
 }
@@ -900,8 +845,6 @@ model InvoicePayment {
 
   invoice       Invoice       @relation(fields: [invoiceId], references: [id])
   method        PaymentMethod @relation(fields: [methodId], references: [id])
-  createdByUser User?         @relation("InvoicePaymentCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?         @relation("InvoicePaymentUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("invoice_payments")
 }
@@ -921,8 +864,6 @@ model InvoiceRefund {
 
   invoice       Invoice       @relation(fields: [invoiceId], references: [id])
   method        PaymentMethod @relation(fields: [methodId], references: [id])
-  createdByUser User?         @relation("InvoiceRefundCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?         @relation("InvoiceRefundUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("invoice_refunds")
 }
@@ -935,8 +876,6 @@ model Journal {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("JournalCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("JournalUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("journals")
 }
@@ -956,8 +895,6 @@ model JournalEntry {
   updatedBy BigInt?  @map("updated_by")
 
   lines         JournalEntryLine[]
-  createdByUser User?              @relation("JournalEntryCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?              @relation("JournalEntryUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("journal_entries")
 }
@@ -980,8 +917,6 @@ model JournalEntryLine {
   journalEntry  JournalEntry @relation(fields: [journalEntryId], references: [id])
   account       Account      @relation(fields: [accountId], references: [id])
   taxCode       TaxCode?     @relation(fields: [taxId], references: [id])
-  createdByUser User?        @relation("JournalEntryLineCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?        @relation("JournalEntryLineUpdatedBy", fields: [updatedBy], references: [id])
 
   matchedBankLines BankTransactionLineMatched[]
 
@@ -1002,8 +937,6 @@ model Notification {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("NotificationCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("NotificationUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("notifications")
 }
@@ -1026,8 +959,6 @@ model PaymentMethod {
   billRefund     BillRefund?
   invoicePayment InvoicePayment?
   invoiceRefund  InvoiceRefund?
-  createdByUser  User?           @relation("PaymentMethodCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser  User?           @relation("PaymentMethodUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("payment_methods")
 }
@@ -1044,8 +975,6 @@ model PaymentTerm {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("PaymentTermCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("PaymentTermUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("payment_terms")
 }
@@ -1097,8 +1026,6 @@ model Product {
   grnLines           GoodsReceivedNoteLine[]
   warehouseInventory WarehouseInventory[]
   stockMovements     StockMovement[]
-  createdByUser      User?                     @relation("ProductCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser      User?                     @relation("ProductUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("products")
 }
@@ -1119,8 +1046,6 @@ model ProductBundle {
   updatedBy BigInt?  @map("updated_by")
 
   bundleItems   ProductBundleItem[]
-  createdByUser User?               @relation("BundleCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?               @relation("BundleUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("product_bundles")
 }
@@ -1154,8 +1079,6 @@ model ProductCategory {
   parent        ProductCategory?  @relation("CategoryParent", fields: [parentId], references: [id])
   children      ProductCategory[] @relation("CategoryParent")
   products      Product[]
-  createdByUser User?             @relation("ProductCategoryCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?             @relation("ProductCategoryUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("product_categories")
 }
@@ -1168,8 +1091,6 @@ model RecurringInvoice {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("RecurringInvoiceCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("RecurringInvoiceUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("recurring_invoices")
 }
@@ -1185,10 +1106,7 @@ model Role {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  users           User[]
   rolePermissions RolePermission[]
-  createdByUser   User?            @relation("RoleCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser   User?            @relation("RoleUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("roles")
 }
@@ -1217,8 +1135,6 @@ model Setting {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("SettingCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("SettingUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("settings")
 }
@@ -1233,8 +1149,6 @@ model State {
   createdBy BigInt?   @map("created_by")
   updatedBy BigInt?   @map("updated_by")
 
-  createdByUser User? @relation("StateCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("StateUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("states")
 }
@@ -1253,8 +1167,6 @@ model TaxCode {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser         User?                  @relation("TaxCodeCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser         User?                  @relation("TaxCodeUpdatedBy", fields: [updatedBy], references: [id])
   billLineTax           BillLine?              @relation("TaxCodeBillLine", map: "tax_code_bill_line_fk")
   billCreditNoteLineTax BillCreditNoteLine?    @relation("TaxCodeBillCreditNoteLine", map: "tax_code_bill_credit_note_line_fk")
   invoiceLineTax        InvoiceLine?           @relation("TaxCodeInvoiceLine", map: "tax_code_invoice_line_fk")
@@ -1275,8 +1187,6 @@ model TaxableType {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("TaxableTypeCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("TaxableTypeUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("taxable_types")
 }
@@ -1292,150 +1202,8 @@ model UnitType {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  createdByUser User? @relation("UnitTypeCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User? @relation("UnitTypeUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("unit_types")
-}
-
-model User {
-  id           BigInt    @id @default(autoincrement())
-  roleId       BigInt
-  googleId     String?
-  discordId    String?
-  passwordHash String    @map("password_hash")
-  email        String    @unique
-  firstName    String?   @map("first_name")
-  lastName     String?   @map("last_name")
-  phone        String?
-  status       String    @default("active")
-  lastLogin    DateTime? @map("last_login")
-  lastLoginIp  String?   @map("last_login_ip")
-
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  createdBy BigInt?
-  updatedBy BigInt?
-
-  role          Role   @relation(fields: [roleId], references: [id])
-  createdByUser User?  @relation("UserCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?  @relation("UserUpdatedBy", fields: [updatedBy], references: [id])
-  createdUsers  User[] @relation("UserCreatedBy")
-  updatedUsers  User[] @relation("UserUpdatedBy")
-
-  // Business Relations
-  auditTrails                  AuditTrail[]            @relation("UserAudit")
-  auditContactCreated          AuditContact[]          @relation("AuditContactCreatedBy")
-  auditContactUpdated          AuditContact[]          @relation("AuditContactUpdatedBy")
-  accountCreated               Account[]               @relation("AccountCreatedBy")
-  accountUpdated               Account[]               @relation("AccountUpdatedBy")
-  assetCreated                 Asset[]                 @relation("AssetCreatedBy")
-  assetUpdated                 Asset[]                 @relation("AssetUpdatedBy")
-  assetTypeCreated             AssetType[]             @relation("AssetTypeCreatedBy")
-  assetTypeUpdated             AssetType[]             @relation("AssetTypeUpdatedBy")
-  bankAccountCreated           BankAccount[]           @relation("BankAccountCreatedBy")
-  bankAccountUpdated           BankAccount[]           @relation("BankAccountUpdatedBy")
-  bankReconciliationCreated    BankReconciliation[]    @relation("BankReconciliationCreatedBy")
-  bankReconciliationUpdated    BankReconciliation[]    @relation("BankReconciliationUpdatedBy")
-  bankTransactionCreated       BankTransaction[]       @relation("BankTransactionCreatedBy")
-  bankTransactionUpdated       BankTransaction[]       @relation("BankTransactionUpdatedBy")
-  billCreated                  Bill[]                  @relation("BillCreatedBy")
-  billUpdated                  Bill[]                  @relation("BillUpdatedBy")
-  billCreditNoteCreated        BillCreditNote[]        @relation("BillCreditNoteCreatedBy")
-  billCreditNoteUpdated        BillCreditNote[]        @relation("BillCreditNoteUpdatedBy")
-  billCreditNoteLineCreated    BillCreditNoteLine[]    @relation("BillCreditNoteLineCreatedBy")
-  billCreditNoteLineUpdated    BillCreditNoteLine[]    @relation("BillCreditNoteLineUpdatedBy")
-  billLineCreated              BillLine[]              @relation("BillLineCreatedBy")
-  billLineUpdated              BillLine[]              @relation("BillLineUpdatedBy")
-  billPaymentsCreated          BillPayment[]           @relation("BillPaymentCreatedBy")
-  billPaymentsUpdated          BillPayment[]           @relation("BillPaymentUpdatedBy")
-  billRefundCreated            BillRefund[]            @relation("BillRefundCreatedBy")
-  billRefundUpdated            BillRefund[]            @relation("BillRefundUpdatedBy")
-  bundleCreated                ProductBundle[]         @relation("BundleCreatedBy")
-  bundleUpdated                ProductBundle[]         @relation("BundleUpdatedBy")
-  businessCodeCreated          BusinessCode[]          @relation("BusinessCodeCreatedBy")
-  businessCodeUpdated          BusinessCode[]          @relation("BusinessCodeUpdatedBy")
-  classficationCodeCreated     ClassficationCode[]     @relation("ClassficationCodeCreatedBy")
-  classficationCodeUpdated     ClassficationCode[]     @relation("ClassficationCodeUpdatedBy")
-  contacts                     Contact[]               @relation("ContactUser")
-  contactsCreatedBy            Contact[]               @relation("ContactCreatedBy")
-  contactsUpdatedBy            Contact[]               @relation("ContactUpdatedBy")
-  contactAddressCreatedBy      ContactAddress[]        @relation("ContactAddressCreatedBy")
-  contactAddressUpdatedBy      ContactAddress[]        @relation("ContactAddressUpdatedBy")
-  contactPersonCreated         ContactPerson[]         @relation("ContactPersonCreatedBy")
-  contactPersonUpdated         ContactPerson[]         @relation("ContactPersonUpdatedBy")
-  countryCreated               Country[]               @relation("CountryCreatedBy")
-  countryUpdated               Country[]               @relation("CountryUpdatedBy")
-  departmentCreated            Department[]            @relation("DepartmentCreatedBy")
-  departmentUpdated            Department[]            @relation("DepartmentUpdatedBy")
-  eInvoiceTypeCreated          EInvoiceType[]          @relation("EInvoiceTypeCreatedBy")
-  eInvoiceTypeUpdated          EInvoiceType[]          @relation("EInvoiceTypeUpdatedBy")
-  invoicesCreated              Invoice[]               @relation("InvoiceCreatedBy")
-  invoicesUpdated              Invoice[]               @relation("InvoiceUpdatedBy")
-  invoiceCreditNoteCreated     InvoiceCreditNote[]     @relation("InvoiceCreditNoteCreatedBy")
-  invoiceCreditNoteUpdated     InvoiceCreditNote[]     @relation("InvoiceCreditNoteUpdatedBy")
-  invoiceCreditNoteLineCreated InvoiceCreditNoteLine[] @relation("InvoiceCreditNoteLineCreatedBy")
-  invoiceCreditNoteLineUpdated InvoiceCreditNoteLine[] @relation("InvoiceCreditNoteLineUpdatedBy")
-  invoiceLineCreated           InvoiceLine[]           @relation("InvoiceLineCreatedBy")
-  invoiceLineUpdated           InvoiceLine[]           @relation("InvoiceLineUpdatedBy")
-  invoicePaymentCreated        InvoicePayment[]        @relation("InvoicePaymentCreatedBy")
-  invoicePaymentUpdated        InvoicePayment[]        @relation("InvoicePaymentUpdatedBy")
-  invoiceRefundCreated         InvoiceRefund[]         @relation("InvoiceRefundCreatedBy")
-  invoiceRefundUpdated         InvoiceRefund[]         @relation("InvoiceRefundUpdatedBy")
-  journalCreated               Journal[]               @relation("JournalCreatedBy")
-  journalUpdated               Journal[]               @relation("JournalUpdatedBy")
-  journalEntriesCreated        JournalEntry[]          @relation("JournalEntryCreatedBy")
-  journalEntriesUpdated        JournalEntry[]          @relation("JournalEntryUpdatedBy")
-  journalEntryLineCreated      JournalEntryLine[]      @relation("JournalEntryLineCreatedBy")
-  journalEntryLineUpdated      JournalEntryLine[]      @relation("JournalEntryLineUpdatedBy")
-  notificationCreated          Notification[]          @relation("NotificationCreatedBy")
-  notificationUpdated          Notification[]          @relation("NotificationUpdatedBy")
-  paymentMethodCreated         PaymentMethod[]         @relation("PaymentMethodCreatedBy")
-  paymentMethodUpdated         PaymentMethod[]         @relation("PaymentMethodUpdatedBy")
-  paymentTermCreatedBy         PaymentTerm[]           @relation("PaymentTermCreatedBy")
-  paymentTermUpdatedBy         PaymentTerm[]           @relation("PaymentTermUpdatedBy")
-  productsCreated              Product[]               @relation("ProductCreatedBy")
-  productsUpdated              Product[]               @relation("ProductUpdatedBy")
-  productCategoryCreated       ProductCategory[]       @relation("ProductCategoryCreatedBy")
-  productCategoryUpdated       ProductCategory[]       @relation("ProductCategoryUpdatedBy")
-  recurringInvoiceCreated      RecurringInvoice[]      @relation("RecurringInvoiceCreatedBy")
-  recurringInvoiceUpdated      RecurringInvoice[]      @relation("RecurringInvoiceUpdatedBy")
-  roleCreatedBy                Role[]                  @relation("RoleCreatedBy")
-  roleUpdatedBy                Role[]                  @relation("RoleUpdatedBy")
-  settingCreated               Setting[]               @relation("SettingCreatedBy")
-  settingUpdated               Setting[]               @relation("SettingUpdatedBy")
-  stateCreated                 State[]                 @relation("StateCreatedBy")
-  stateUpdated                 State[]                 @relation("StateUpdatedBy")
-  taxCodeCreated               TaxCode[]               @relation("TaxCodeCreatedBy")
-  taxCodeUpdated               TaxCode[]               @relation("TaxCodeUpdatedBy")
-  taxableTypeCreated           TaxableType[]           @relation("TaxableTypeCreatedBy")
-  taxableTypeUpdated           TaxableType[]           @relation("TaxableTypeUpdatedBy")
-  unitTypeCreated              UnitType[]              @relation("UnitTypeCreatedBy")
-  unitTypeUpdated              UnitType[]              @relation("UnitTypeUpdatedBy")
-
-  // Sales & Purchase Relations
-  salesQuotesCreated   SalesQuote[]          @relation("SalesQuoteCreatedBy")
-  salesQuotesUpdated   SalesQuote[]          @relation("SalesQuoteUpdatedBy")
-  salesOrdersCreated   SalesOrder[]          @relation("SalesOrderCreatedBy")
-  salesOrdersUpdated   SalesOrder[]          @relation("SalesOrderUpdatedBy")
-  deliveryOrderCreated DeliveryOrder[]       @relation("DeliveryOrderCreatedBy")
-  deliveryOrderUpdated DeliveryOrder[]       @relation("DeliveryOrderUpdatedBy")
-  purchaseRequester    PurchaseRequisition[] @relation("PurchaseRequester")
-  purchaseReqCreated   PurchaseRequisition[] @relation("PurchaseReqCreatedBy")
-  purchaseReqUpdated   PurchaseRequisition[] @relation("PurchaseReqUpdatedBy")
-  purchaseOrderCreated PurchaseOrder[]       @relation("PurchaseOrderCreatedBy")
-  purchaseOrderUpdated PurchaseOrder[]       @relation("PurchaseOrderUpdatedBy")
-  goodsReceivedCreated GoodsReceivedNote[]   @relation("GoodsReceivedCreatedBy")
-  goodsReceivedUpdated GoodsReceivedNote[]   @relation("GoodsReceivedUpdatedBy")
-  warehouseCreated     Warehouse[]           @relation("WarehouseCreatedBy")
-  warehouseUpdated     Warehouse[]           @relation("WarehouseUpdatedBy")
-
-  bankStatementsCreated             BankStatement[]              @relation("BankStatementCreatedBy")
-  bankStatementsUpdated             BankStatement[]              @relation("BankStatementUpdatedBy")
-  bankTransactionLineMatchedCreated BankTransactionLineMatched[] @relation("BankTransactionLineMatchedCreatedBy")
-
-  @@map("users")
 }
 
 // --- Sales & Purchase Models ---
@@ -1465,8 +1233,6 @@ model SalesQuote {
 
   contact       Contact          @relation("SalesQuoteContact", fields: [contactId], references: [id])
   quoteLines    SalesQuoteLine[]
-  createdByUser User?            @relation("SalesQuoteCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?            @relation("SalesQuoteUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("sales_quotes")
 }
@@ -1519,8 +1285,6 @@ model SalesOrder {
   contact        Contact          @relation("SalesOrderContact", fields: [contactId], references: [id])
   orderLines     SalesOrderLine[]
   deliveryOrders DeliveryOrder[]
-  createdByUser  User?            @relation("SalesOrderCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser  User?            @relation("SalesOrderUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("sales_orders")
 }
@@ -1569,8 +1333,6 @@ model DeliveryOrder {
   contact        Contact             @relation("DeliveryOrderContact", fields: [contactId], references: [id])
   deliveryLines  DeliveryOrderLine[]
   stockMovements StockMovement[]
-  createdByUser  User?               @relation("DeliveryOrderCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser  User?               @relation("DeliveryOrderUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("delivery_orders")
 }
@@ -1607,12 +1369,9 @@ model PurchaseRequisition {
   createdBy BigInt?  @map("created_by")
   updatedBy BigInt?  @map("updated_by")
 
-  requester      User                      @relation("PurchaseRequester", fields: [requestedBy], references: [id])
   department     Department?               @relation(fields: [departmentId], references: [id])
   reqLines       PurchaseRequisitionLine[]
   purchaseOrders PurchaseOrder[]
-  createdByUser  User?                     @relation("PurchaseReqCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser  User?                     @relation("PurchaseReqUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("purchase_requisitions")
 }
@@ -1658,8 +1417,6 @@ model PurchaseOrder {
   requisition   PurchaseRequisition? @relation(fields: [requisitionId], references: [id])
   orderLines    PurchaseOrderLine[]
   receipts      GoodsReceivedNote[]
-  createdByUser User?                @relation("PurchaseOrderCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser User?                @relation("PurchaseOrderUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("purchase_orders")
 }
@@ -1702,8 +1459,6 @@ model GoodsReceivedNote {
   contact        Contact                 @relation("GoodsReceivedContact", fields: [contactId], references: [id])
   receiptLines   GoodsReceivedNoteLine[]
   stockMovements StockMovement[]
-  createdByUser  User?                   @relation("GoodsReceivedCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser  User?                   @relation("GoodsReceivedUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("goods_received_notes")
 }
@@ -1744,8 +1499,6 @@ model Warehouse {
   stockMovementsTo   StockMovement[]         @relation("ToWarehouse")
   deliveryOrderLines DeliveryOrderLine[]
   grnLines           GoodsReceivedNoteLine[]
-  createdByUser      User?                   @relation("WarehouseCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser      User?                   @relation("WarehouseUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("warehouses")
 }

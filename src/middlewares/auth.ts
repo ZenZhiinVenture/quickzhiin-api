@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 
 /**
  * Middleware to authenticate requests using JWT.
- * Attaches decoded user payload (id, roleId, permissions) to req.user.
+ * Attaches decoded user payload to req.user.
+ * The payload now contains tenantAccess[] instead of a single roleId.
  */
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
@@ -26,15 +27,13 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       return res.status(403).json({ message: 'error_invalid_token_payload' });
     }
 
-    req.user = {
+    (req as any).user = {
       id: decoded.id,
       email: decoded.email,
+      tenantAccess: decoded.tenantAccess || [],
+      // Legacy fallback
       roleId: decoded.roleId,
       permissions: decoded.permissions,
-      googleAccessToken: decoded.googleAccessToken,
-      googleRefreshToken: decoded.googleRefreshToken,
-      discordAccessToken: decoded.discordAccessToken,
-      discordRefreshToken: decoded.discordRefreshToken,
     };
 
     next();

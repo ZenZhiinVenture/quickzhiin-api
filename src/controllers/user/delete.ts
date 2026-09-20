@@ -1,32 +1,34 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../../services/prisma/prismaClient';
+import { centralPrisma } from '../../services/prisma/prismaClient';
 
 export default async function deleteUser(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
+    const tenant = (req as any).tenant;
 
-    const userToDelete = await prisma.user.findUnique({ 
+    const userToDelete = await centralPrisma.user.findUnique({ 
       where: { id: BigInt(id) },
-      include: { role: true }
     });
 
     if (!userToDelete) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Prevent deleting the only remaining admin or the current account
-    if (userToDelete.email === 'admin') {
-      return res.status(403).json({ message: 'Cannot delete the system admin account' });
+    if (tenant) {
+      // Remove access to this tenant
+      await centralPrisma.tenantUserAccess.deleteMany({
+        where: { userId: BigInt(id), tenantId: tenant.id },
+      });
+    } else {
+      await centralPrisma.user.delete({
+        where: { id: BigInt(id) },
+      });
     }
-
-    await prisma.user.delete({
-      where: { id: BigInt(id) },
-    });
 
     return res.status(200).json({
       message: 'User deleted successfully',
     });
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({
       message: err.message,
     });
