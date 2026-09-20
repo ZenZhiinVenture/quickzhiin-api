@@ -738,14 +738,6 @@ model Invoice {
   billingAddress  String?
   shippingAddress String?
 
-  // LHDN e-Invoice tracking
-  lhdnUuid           String?
-  lhdnLongId         String?
-  lhdnStatus         String? // e.g. Submitted, Valid, Invalid, Cancelled
-  lhdnValidationLink String?
-  lhdnSubmissionDate DateTime?
-  lhdnError          String?
-
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   createdBy BigInt?  @map("created_by")
