@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../services/prisma/prismaClient';
 
 export const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -7,12 +6,11 @@ export const requireAdmin = async (req: Request, res: Response, next: NextFuncti
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: BigInt(req.user.id) },
-      include: { role: true },
-    });
+    const tenantAccess = (req as any).tenantAccess;
+    const role = (tenantAccess?.role || '').toUpperCase();
 
-    if (!user || user.role.name !== 'Admin') {
+    // Allow OWNER or ADMIN
+    if (role !== 'ADMIN' && role !== 'OWNER') {
       return res.status(403).json({ message: 'Forbidden: Admin access required' });
     }
 

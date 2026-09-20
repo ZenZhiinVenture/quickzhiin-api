@@ -20,6 +20,7 @@ import reportRoutes from './routes/report';
 import tradeRoutes from './routes/trade';
 import userRoutes from './routes/user';
 import bankAccountRoutes from './routes/bankAccount';
+import bankingRoutes from './routes/banking';
 import roleRoutes from './routes/role';
 import { errorHandler } from './middlewares/error';
 import { prisma } from './services/prisma/prismaClient';
@@ -51,7 +52,7 @@ import { requireTenant } from './middlewares/tenant';
 
 import lhdnRoutes from './routes/lhdn';
 
-app.use(`${apiPrefix}/auth`, requireTenant, authRoutes);
+app.use(`${apiPrefix}/auth`, authRoutes);
 app.use(`${apiPrefix}/admin`, adminRoutes);
 app.use(`${apiPrefix}/contact`, requireTenant, contactRoutes);
 app.use(`${apiPrefix}/product`, requireTenant, productRoutes);
@@ -67,6 +68,7 @@ app.use(`${apiPrefix}/user`, requireTenant, userRoutes);
 app.use(`${apiPrefix}/bank-account`, requireTenant, bankAccountRoutes);
 app.use(`${apiPrefix}/role`, requireTenant, roleRoutes);
 app.use(`${apiPrefix}/lhdn`, requireTenant, lhdnRoutes);
+app.use(`${apiPrefix}/banking`, requireTenant, bankingRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: 'Not Found' });

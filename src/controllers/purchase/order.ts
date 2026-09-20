@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { purchaseRequisitionService } from '../../services/purchase/requisition';
 import { purchaseOrderService } from '../../services/purchase/order';
 import { goodsReceivedNoteService } from '../../services/purchase/grn';
+import { prisma } from '../../prisma/prismaClient';
+import { TransactionStatusType } from '@prisma/client';
 import logger from '../../utils/logger';
 
 // --- Purchase Requisition Controllers ---
@@ -48,6 +50,52 @@ export const getPurchaseOrderList = async (req: Request, res: Response, next: Ne
   }
 };
 
+export const updatePurchaseOrder = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = BigInt(req.params.id);
+    const userId = (req as any).user.id;
+    const updated = await prisma.purchaseOrder.update({
+      where: { id },
+      data: { ...req.body, updatedBy: BigInt(userId) }
+    });
+    res.status(200).json({ status: 'success', data: updated });
+  } catch (error) {
+    logger.error('Error updating purchase order:', error);
+    next(error);
+  }
+};
+
+export const patchPurchaseOrderStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = BigInt(req.params.id);
+    const userId = (req as any).user.id;
+    const { status } = req.body as { status: TransactionStatusType };
+    const updated = await prisma.purchaseOrder.update({
+      where: { id },
+      data: { status, updatedBy: BigInt(userId) }
+    });
+    res.status(200).json({ status: 'success', data: updated });
+  } catch (error) {
+    logger.error('Error patching purchase order status:', error);
+    next(error);
+  }
+};
+
+export const deletePurchaseOrder = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = BigInt(req.params.id);
+    const userId = (req as any).user.id;
+    await prisma.purchaseOrder.update({
+      where: { id },
+      data: { isActive: false, updatedBy: BigInt(userId) }
+    });
+    res.status(200).json({ status: 'success', data: { message: 'Purchase order deleted successfully' } });
+  } catch (error) {
+    logger.error('Error deleting purchase order:', error);
+    next(error);
+  }
+};
+
 // --- Goods Received Note Controllers ---
 
 export const createGRN = async (req: Request, res: Response, next: NextFunction) => {
@@ -66,6 +114,52 @@ export const getGRNList = async (req: Request, res: Response, next: NextFunction
     const grns = await goodsReceivedNoteService.list();
     res.status(200).json({ status: 'success', data: { items: grns } });
   } catch (error) {
+    next(error);
+  }
+};
+
+export const updateGRN = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = BigInt(req.params.id);
+    const userId = (req as any).user.id;
+    const updated = await prisma.goodsReceivedNote.update({
+      where: { id },
+      data: { ...req.body, updatedBy: BigInt(userId) }
+    });
+    res.status(200).json({ status: 'success', data: updated });
+  } catch (error) {
+    logger.error('Error updating GRN:', error);
+    next(error);
+  }
+};
+
+export const patchGRNStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = BigInt(req.params.id);
+    const userId = (req as any).user.id;
+    const { status } = req.body as { status: TransactionStatusType };
+    const updated = await prisma.goodsReceivedNote.update({
+      where: { id },
+      data: { status, updatedBy: BigInt(userId) }
+    });
+    res.status(200).json({ status: 'success', data: updated });
+  } catch (error) {
+    logger.error('Error patching GRN status:', error);
+    next(error);
+  }
+};
+
+export const deleteGRN = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = BigInt(req.params.id);
+    const userId = (req as any).user.id;
+    await prisma.goodsReceivedNote.update({
+      where: { id },
+      data: { isActive: false, updatedBy: BigInt(userId) }
+    });
+    res.status(200).json({ status: 'success', data: { message: 'GRN deleted successfully' } });
+  } catch (error) {
+    logger.error('Error deleting GRN:', error);
     next(error);
   }
 };

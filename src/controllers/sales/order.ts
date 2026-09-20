@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { salesOrderService } from '../../services/sales/order';
 import { deliveryOrderService } from '../../services/sales/delivery';
+import { TransactionStatusType } from '@prisma/client';
 import logger from '../../utils/logger';
 
 // --- Sales Order Controllers ---
@@ -73,6 +74,52 @@ export const createDeliveryOrder = async (req: Request, res: Response, next: Nex
     res.status(201).json({ status: 'success', data: delivery });
   } catch (error) {
     logger.error('Error creating delivery order:', error);
+    next(error);
+  }
+};
+
+export const updateSalesOrder = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = BigInt(req.params.id);
+    const userId = (req as any).user.id;
+    const updated = await prisma.salesOrder.update({
+      where: { id },
+      data: { ...req.body, updatedBy: BigInt(userId) }
+    });
+    res.status(200).json({ status: 'success', data: updated });
+  } catch (error) {
+    logger.error('Error updating sales order:', error);
+    next(error);
+  }
+};
+
+export const patchSalesOrderStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = BigInt(req.params.id);
+    const userId = (req as any).user.id;
+    const { status } = req.body as { status: TransactionStatusType };
+    const updated = await prisma.salesOrder.update({
+      where: { id },
+      data: { status, updatedBy: BigInt(userId) }
+    });
+    res.status(200).json({ status: 'success', data: updated });
+  } catch (error) {
+    logger.error('Error patching sales order status:', error);
+    next(error);
+  }
+};
+
+export const deleteSalesOrder = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = BigInt(req.params.id);
+    const userId = (req as any).user.id;
+    await prisma.salesOrder.update({
+      where: { id },
+      data: { isActive: false, updatedBy: BigInt(userId) }
+    });
+    res.status(200).json({ status: 'success', data: { message: 'Sales order deleted successfully' } });
+  } catch (error) {
+    logger.error('Error deleting sales order:', error);
     next(error);
   }
 };

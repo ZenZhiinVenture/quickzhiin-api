@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../../services/prisma/prismaClient';
+import { centralPrisma } from '../../services/prisma/prismaClient';
 import * as bcrypt from 'bcryptjs';
 
 export default async function updateUser(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
-    const { email, password, roleId, firstName, lastName, phone, status } = req.body;
+    const { email, password, role, roleId, firstName, lastName, phone, status } = req.body;
+    const tenant = (req as any).tenant;
 
-    const existingUser = await prisma.user.findUnique({ where: { id: BigInt(id) } });
+    const existingUser = await centralPrisma.user.findUnique({ where: { id: BigInt(id) } });
     if (!existingUser) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -18,34 +19,43 @@ export default async function updateUser(req: Request, res: Response, next: Next
       lastName,
       phone,
       status,
-      roleId: roleId ? BigInt(roleId) : undefined,
     };
 
     if (password) {
       updateData.passwordHash = await bcrypt.hash(password, 10);
     }
 
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await centralPrisma.user.update({
       where: { id: BigInt(id) },
       data: updateData,
-      include: {
-        role: true,
-      }
     });
 
+    if (tenant && (role || roleId !== undefined)) {
+      await centralPrisma.tenantUserAccess.updateMany({
+        where: { userId: BigInt(id), tenantId: tenant.id },
+        data: {
+          ...(role ? { role } : {}),
+          ...(roleId !== undefined ? { roleId: roleId ? BigInt(roleId) : null } : {}),
+        },
+      });
+    }
+
     const responseData = {
-      ...updatedUser,
       id: updatedUser.id.toString(),
-      roleId: updatedUser.roleId.toString(),
-      createdBy: updatedUser.createdBy?.toString(),
-      updatedBy: updatedUser.updatedBy?.toString(),
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      phone: updatedUser.phone,
+      status: updatedUser.status,
+      role,
+      roleId: roleId?.toString(),
     };
 
     return res.status(200).json({
       message: 'User updated successfully',
       user: responseData,
     });
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({
       message: err.message,
     });
