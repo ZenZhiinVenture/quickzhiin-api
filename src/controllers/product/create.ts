@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../services/prisma/prismaClient';
-import upsertProduct from 'src/services/product/upsert';
+import upsertProduct from '../../services/product/upsert';
 
 export default async function createProduct(req: Request, res: Response, next: NextFunction) {
   try {

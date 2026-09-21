@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { paginatedQuery } from 'src/helpers/paginatedQuery';
+import { paginatedQuery } from '../../helpers/paginatedQuery';
 import { prisma } from '../../services/prisma/prismaClient';
 
 export default async function getProductList(req: Request, res: Response, next: NextFunction) {
