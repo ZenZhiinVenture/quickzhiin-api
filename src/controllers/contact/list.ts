@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../services/prisma/prismaClient';
-import { paginatedQuery } from 'src/helpers/paginatedQuery';
+import { paginatedQuery } from '../../helpers/paginatedQuery';
 
 export default async function getContactList(req: Request, res: Response, next: NextFunction) {
   try {
