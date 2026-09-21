@@ -601,6 +601,7 @@ model Contact {
   goodsReceived      GoodsReceivedNote[] @relation("GoodsReceivedContact")
   invoiceCreditNotes InvoiceCreditNote[] @relation("InvoiceCreditNoteContact")
   billCreditNotes    BillCreditNote[]    @relation("BillCreditNoteContact")
+  recurringInvoices  RecurringInvoice[]
 
   @@unique([legalname, regNoType, regNo])
   @@index([contactType])
@@ -1092,18 +1093,6 @@ model ProductCategory {
   @@map("product_categories")
 }
 
-model RecurringInvoice {
-  id        BigInt   @id @default(autoincrement())
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  createdBy BigInt?  @map("created_by")
-  updatedBy BigInt?  @map("updated_by")
-
-
-  @@map("recurring_invoices")
-}
-
 model Role {
   id          BigInt  @id @default(autoincrement())
   name        String  @unique
@@ -1585,4 +1574,45 @@ model ExchangeRate {
 
   @@map("exchange_rates")
 }
+
+// ─── Recurring Invoices & Retainers ──────────────────────────────────────────
+
+enum RecurringFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  BIANNUALLY
+  ANNUALLY
+}
+
+model RecurringInvoice {
+  id                BigInt             @id @default(autoincrement())
+  profileName       String             // e.g. "Monthly Retainer - Acme Corp"
+  contactId         BigInt             @map("contact_id")
+  frequency         RecurringFrequency @default(MONTHLY)
+  startDate         DateTime
+  endDate           DateTime?
+  nextRunDate       DateTime
+  lastRunDate       DateTime?
+  currency          String             @default("MYR")
+  exchangeRate      Decimal            @default(1.0) @db.Decimal(19, 6)
+  status            String             @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
+  autoSendEmail     Boolean            @default(false)
+  lineItems         Json               // Invoice lines template JSON array
+  notes             String?
+  paymentTerms      String?            @default("Net 30")
+  invoicesGenerated Int                @default(0)
+  maxOccurrences    Int?               // Optional limit (e.g. 12 months)
+
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  createdBy         BigInt?            @map("created_by")
+  updatedBy         BigInt?            @map("updated_by")
+
+  contact           Contact            @relation(fields: [contactId], references: [id])
+
+  @@map("recurring_invoices")
+}
+
 
