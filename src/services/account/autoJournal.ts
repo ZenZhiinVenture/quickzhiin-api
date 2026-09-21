@@ -39,8 +39,15 @@ export const autoJournal = {
       where: { journalEntryId: journalEntry.id },
     });
 
+    // Multi-Currency: Convert to base currency using transaction exchange rate
+    const rate = Number(bill.exchangeRate) || 1.0;
+    const baseTotal = Number((Number(bill.total) * rate).toFixed(2));
+    const baseSubtotal = Number((Number(bill.subtotal) * rate).toFixed(2));
+    const baseTax = Number((Number(bill.tax) * rate).toFixed(2));
+    const roundingValue = Number((Number(bill.rounding || 0) * rate).toFixed(2));
+
     // Preparing balanced lines for Bill (Purchase)
-    // Line 1: Credit Accounts Payable (Total Amount)
+    // Line 1: Credit Accounts Payable (Total Base Amount)
     const apAccount = await this.getAccountByCode(prisma, '2100', 'Accounts Payable', 'LIABILITY');
     await prisma.journalEntryLine.create({
       data: {
@@ -48,7 +55,10 @@ export const autoJournal = {
         accountId: apAccount.id,
         description: `Bill ${bill.number} - ${bill.customer?.firstName || 'Supplier'}`,
         debit: 0,
-        credit: bill.total,
+        credit: baseTotal,
+        currency: bill.currency || 'MYR',
+        foreignAmount: Number(bill.total),
+        exchangeRate: rate,
         isActive: true,
         createdAt: now,
         createdBy: BigInt(userId),
@@ -57,15 +67,18 @@ export const autoJournal = {
       },
     });
 
-    // Line 2: Debit Purchase Expense (Subtotal)
+    // Line 2: Debit Purchase Expense (Subtotal Base Amount)
     const expenseAccount = await this.getAccountByCode(prisma, '5000', 'Purchases', 'EXPENSE');
     await prisma.journalEntryLine.create({
       data: {
         journalEntryId: journalEntry.id,
         accountId: expenseAccount.id,
         description: `Purchases from Bill ${bill.number}`,
-        debit: bill.subtotal,
+        debit: baseSubtotal,
         credit: 0,
+        currency: bill.currency || 'MYR',
+        foreignAmount: Number(bill.subtotal),
+        exchangeRate: rate,
         isActive: true,
         createdAt: now,
         createdBy: BigInt(userId),
@@ -75,15 +88,18 @@ export const autoJournal = {
     });
 
     // Line 3: Debit Tax Receivable (Input Tax, if any)
-    if (Number(bill.tax) > 0) {
+    if (baseTax > 0) {
       const taxAccount = await this.getAccountByCode(prisma, '1310', 'Tax Receivable', 'ASSET');
       await prisma.journalEntryLine.create({
         data: {
           journalEntryId: journalEntry.id,
           accountId: taxAccount.id,
           description: `Tax claimable from Bill ${bill.number}`,
-          debit: bill.tax,
+          debit: baseTax,
           credit: 0,
+          currency: bill.currency || 'MYR',
+          foreignAmount: Number(bill.tax),
+          exchangeRate: rate,
           isActive: true,
           createdAt: now,
           createdBy: BigInt(userId),
@@ -94,8 +110,7 @@ export const autoJournal = {
     }
 
     // Line 4: Rounding Adjustment (if any)
-    if (Number(bill.rounding) !== 0) {
-      const roundingValue = Number(bill.rounding);
+    if (roundingValue !== 0) {
       const roundingAccount = await this.getAccountByCode(prisma, '8500', 'Rounding Adjustment', 'EXPENSE');
       await prisma.journalEntryLine.create({
         data: {
@@ -104,6 +119,9 @@ export const autoJournal = {
           description: `Rounding adjustment for Bill ${bill.number}`,
           debit: roundingValue > 0 ? roundingValue : 0,
           credit: roundingValue < 0 ? Math.abs(roundingValue) : 0,
+          currency: bill.currency || 'MYR',
+          foreignAmount: Number(bill.rounding || 0),
+          exchangeRate: rate,
           isActive: true,
           createdAt: now,
           createdBy: BigInt(userId),
@@ -154,8 +172,15 @@ export const autoJournal = {
       where: { journalEntryId: journalEntry.id },
     });
 
+    // Multi-Currency: Convert to base currency using transaction exchange rate
+    const rate = Number(invoice.exchangeRate) || 1.0;
+    const baseTotal = Number((Number(invoice.total) * rate).toFixed(2));
+    const baseSubtotal = Number((Number(invoice.subtotal) * rate).toFixed(2));
+    const baseTax = Number((Number(invoice.tax) * rate).toFixed(2));
+    const roundingValue = Number((Number(invoice.rounding || 0) * rate).toFixed(2));
+
     // 3. Prepare balanced lines
-    // Line 1: Debit Accounts Receivable (Total Amount)
+    // Line 1: Debit Accounts Receivable (Total Base Amount)
     const arAccount = await this.getAccountByCode(prisma, '1200', 'Accounts Receivable', 'ASSET');
     
     await prisma.journalEntryLine.create({
@@ -163,8 +188,11 @@ export const autoJournal = {
         journalEntryId: journalEntry.id,
         accountId: arAccount.id,
         description: `Invoice ${invoice.number} - ${invoice.customer?.legalname || 'Customer'}`,
-        debit: invoice.total,
+        debit: baseTotal,
         credit: 0,
+        currency: invoice.currency || 'MYR',
+        foreignAmount: Number(invoice.total),
+        exchangeRate: rate,
         isActive: true,
         createdAt: now,
         createdBy: BigInt(userId),
@@ -173,7 +201,7 @@ export const autoJournal = {
       },
     });
 
-    // Line 2: Credit Sales Revenue (Subtotal)
+    // Line 2: Credit Sales Revenue (Subtotal Base Amount)
     const salesAccount = await this.getAccountByCode(prisma, '4000', 'Sales Revenue', 'REVENUE');
     
     await prisma.journalEntryLine.create({
@@ -182,7 +210,10 @@ export const autoJournal = {
         accountId: salesAccount.id,
         description: `Sales from Invoice ${invoice.number}`,
         debit: 0,
-        credit: invoice.subtotal,
+        credit: baseSubtotal,
+        currency: invoice.currency || 'MYR',
+        foreignAmount: Number(invoice.subtotal),
+        exchangeRate: rate,
         isActive: true,
         createdAt: now,
         createdBy: BigInt(userId),
@@ -192,7 +223,7 @@ export const autoJournal = {
     });
 
     // Line 3: Credit Tax Payable (Tax Amount, if any)
-    if (Number(invoice.tax) > 0) {
+    if (baseTax > 0) {
       const taxAccount = await this.getAccountByCode(prisma, '2200', 'Tax Payable', 'LIABILITY');
       await prisma.journalEntryLine.create({
         data: {
@@ -200,7 +231,10 @@ export const autoJournal = {
           accountId: taxAccount.id,
           description: `Tax from Invoice ${invoice.number}`,
           debit: 0,
-          credit: invoice.tax,
+          credit: baseTax,
+          currency: invoice.currency || 'MYR',
+          foreignAmount: Number(invoice.tax),
+          exchangeRate: rate,
           isActive: true,
           createdAt: now,
           createdBy: BigInt(userId),
@@ -211,8 +245,7 @@ export const autoJournal = {
     }
 
     // Line 4: Rounding Adjustment (if any)
-    if (Number(invoice.rounding) !== 0) {
-      const roundingValue = Number(invoice.rounding);
+    if (roundingValue !== 0) {
       const roundingAccount = await this.getAccountByCode(prisma, '8500', 'Rounding Adjustment', 'REVENUE');
       await prisma.journalEntryLine.create({
         data: {
@@ -221,6 +254,9 @@ export const autoJournal = {
           description: `Rounding adjustment for Invoice ${invoice.number}`,
           debit: roundingValue < 0 ? Math.abs(roundingValue) : 0,
           credit: roundingValue > 0 ? roundingValue : 0,
+          currency: invoice.currency || 'MYR',
+          foreignAmount: Number(invoice.rounding || 0),
+          exchangeRate: rate,
           isActive: true,
           createdAt: now,
           createdBy: BigInt(userId),

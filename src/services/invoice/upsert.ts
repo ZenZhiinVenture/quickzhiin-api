@@ -19,6 +19,7 @@ export interface InvoiceLineInput {
 export interface InvoiceInput {
   contactId: string | number | bigint;
   currency: string;
+  exchangeRate?: number | string;
   date: string | Date;
   dueDate?: string | Date;
   notes?: string;
@@ -83,6 +84,10 @@ export async function upsertInvoice(
   });
   const nextNumber = lastInvoice ? (parseInt(lastInvoice.number, 10) + 1).toString().padStart(6, '0') : '000001';
 
+  // Calculate base total with user-input exchange rate
+  const exchangeRate = Number(invoiceData.exchangeRate) || 1.0;
+  const baseTotal = Number((total * exchangeRate).toFixed(2));
+
   // Create invoice and lines in a transaction
   const createdInvoice = await prisma.$transaction(async (tx) => {
     const data = {
@@ -90,11 +95,13 @@ export async function upsertInvoice(
       date: new Date(invoiceData.date),
       contactId: BigInt(invoiceData.contactId),
       currency: invoiceData.currency,
+      exchangeRate: new Prisma.Decimal(exchangeRate),
       subtotal: new Prisma.Decimal(subtotal).toString(),
       tax: new Prisma.Decimal(totalTax).toString(),
       discount: new Prisma.Decimal(totalDiscount).toString(),
       rounding: new Prisma.Decimal(rounding).toString(),
       total: new Prisma.Decimal(total).toString(),
+      baseTotal: new Prisma.Decimal(baseTotal),
       notes: invoiceData.notes,
       paymentTerms: invoiceData.paymentTerms,
       dueDate: invoiceData.dueDate ? new Date(invoiceData.dueDate) : undefined,

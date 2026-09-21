@@ -16,6 +16,7 @@ export interface BillLineInput {
 export interface BillInput {
   customerId: number; // For Bills, this is effectively the Supplier/Vendor ID
   currency: string;
+  exchangeRate?: number | string;
   date: Date;
   dueDate?: Date;
   notes?: string;
@@ -78,6 +79,10 @@ export async function upsertBill(
   const nextNumber = lastBill ? (parseInt(lastBill.number.replace('BIL-', ''), 10) + 1).toString().padStart(6, '0') : '000001';
   const billNumber = `BIL-${nextNumber}`;
 
+  const currency = billData.currency || 'MYR';
+  const exchangeRate = Number(billData.exchangeRate) || 1.0;
+  const baseTotal = Number((total * exchangeRate).toFixed(2));
+
   // Create bill and lines in a transaction
   const createdBill = await prisma.$transaction(async (tx) => {
     const bill = await prisma.bill.create({
@@ -85,11 +90,14 @@ export async function upsertBill(
         number: billNumber,
         date: billData.date,
         contactId: BigInt(billData.customerId),
+        currency,
+        exchangeRate: new Prisma.Decimal(exchangeRate),
         subtotal: new Prisma.Decimal(subtotal).toString(),
         tax: new Prisma.Decimal(totalTax).toString(),
         discount: new Prisma.Decimal(totalDiscount).toString(),
         rounding: new Prisma.Decimal(rounding).toString(),
         total: new Prisma.Decimal(total).toString(),
+        baseTotal: new Prisma.Decimal(baseTotal),
         notes: billData.notes,
         billingAddress: billData.billingAddress,
         shippingAddress: billData.shippingAddress,
