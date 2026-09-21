@@ -27,6 +27,7 @@ import { prisma } from './services/prisma/prismaClient';
 import logger from './utils/logger';
 
 import adminRoutes from './routes/admin';
+import accountingPeriodRoutes from './routes/accountingPeriod';
 
 const app: Express = express();
 
