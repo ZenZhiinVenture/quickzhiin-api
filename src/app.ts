@@ -60,6 +60,7 @@ app.use(`${apiPrefix}/inventory/product`, requireTenant, productRoutes);
 app.use(`${apiPrefix}/invoice`, requireTenant, invoiceRoutes);
 app.use(`${apiPrefix}/bill`, requireTenant, billRoutes);
 app.use(`${apiPrefix}/account`, requireTenant, accountRoutes);
+app.use(`${apiPrefix}/accounting-period`, requireTenant, accountingPeriodRoutes);
 app.use(`${apiPrefix}/journal-entry`, requireTenant, journalEntryRoutes);
 app.use(`${apiPrefix}/payment`, requireTenant, paymentRoutes);
 app.use(`${apiPrefix}/report`, requireTenant, reportRoutes);

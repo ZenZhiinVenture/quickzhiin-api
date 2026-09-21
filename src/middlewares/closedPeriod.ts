@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../../services/prisma/prismaClient';
-import logger from '../../utils/logger';
+import { prisma } from '../services/prisma/prismaClient';
+import logger from '../utils/logger';
 
 /**
  * Middleware: guardClosedPeriod
