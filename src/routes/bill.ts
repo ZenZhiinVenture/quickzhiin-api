@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticateToken } from '../middlewares/auth';
+import { guardClosedPeriod } from '../middlewares/closedPeriod';
 import {
   createBillTransaction,
   getBillTransactionList,
@@ -19,10 +20,10 @@ router.get('/', getBillTransactionList);
 router.get('/:id', getBillTransaction);
 
 // POST /api/bill - Create a new bill
-router.post('/', createBillTransaction);
+router.post('/', guardClosedPeriod, createBillTransaction);
 
 // PUT /api/bill/:id - Update a bill
-router.put('/:id', updateBillTransaction);
+router.put('/:id', guardClosedPeriod, updateBillTransaction);
 
 // DELETE /api/bill/:id - Delete a bill
 router.delete('/:id', deleteBill);

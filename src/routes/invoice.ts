@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticateToken } from '../middlewares/auth';
+import { guardClosedPeriod } from '../middlewares/closedPeriod';
 import {
   createInvoice,
   getInvoiceList,
@@ -25,7 +26,7 @@ router.get('/:id', getInvoiceDetails);
 router.get('/:id/pdf', getInvoicePdf);
 
 // POST /api/invoice - Create a new invoice
-router.post('/', createInvoice);
+router.post('/', guardClosedPeriod, createInvoice);
 
 // POST /api/invoice/:id/send - Send invoice email
 router.post('/:id/send', sendInvoiceEmail);
@@ -34,7 +35,7 @@ router.post('/:id/send', sendInvoiceEmail);
 router.post('/batch', batchOperations);
 
 // PUT /api/invoice/:id - Update an invoice
-router.put('/:id', updateInvoice);
+router.put('/:id', guardClosedPeriod, updateInvoice);
 
 // DELETE /api/invoice/:id - Delete an invoice
 router.delete('/:id', deleteInvoice);
