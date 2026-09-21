@@ -9,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma)](https://www.prisma.io/)
 
-[Frontend Repo](../quickzhiin) · [Report a Bug](https://github.com/zenzhiin/quickzhiin-api/issues) · [Request Feature](https://github.com/zenzhiin/quickzhiin-api/issues)
+[Frontend Repo](../quickzhiin) · [Report a Bug](https://github.com/ZenZhiinVenture/quickzhiin-api/issues) · [Request Feature](https://github.com/ZenZhiinVenture/quickzhiin-api/issues)
 
 </div>
 
@@ -96,7 +96,7 @@ Each tenant gets a fully isolated PostgreSQL database. The central database mana
 
 ```bash
 # 1. Clone the API
-git clone https://github.com/zenzhiin/quickzhiin-api.git
+git clone https://github.com/ZenZhiinVenture/quickzhiin-api.git
 cd quickzhiin-api
 
 # 2. Install dependencies
