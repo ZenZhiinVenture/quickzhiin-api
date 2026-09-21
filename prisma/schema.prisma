@@ -383,11 +383,14 @@ model Bill {
   number          String                @unique
   date            DateTime
   contactId       BigInt                @map("contact_id")
+  currency        String                @default("MYR")
+  exchangeRate    Decimal               @default(1.0) @db.Decimal(19, 6)
   subtotal        Decimal
   tax             Decimal               @default(0)
   discount        Decimal               @default(0)
   rounding        Decimal               @default(0)
   total           Decimal
+  baseTotal       Decimal?              @db.Decimal(19, 4)
   status          TransactionStatusType @default(DRAFT)
   notes           String?
   paymentTerms    String?
@@ -482,11 +485,14 @@ model BillLine {
 }
 
 model BillPayment {
-  id       BigInt   @id @default(autoincrement())
-  billId   BigInt   @unique
-  amount   Decimal
-  methodId BigInt   @unique
-  paidAt   DateTime
+  id               BigInt   @id @default(autoincrement())
+  billId           BigInt   @unique
+  amount           Decimal
+  currency         String   @default("MYR")
+  exchangeRate     Decimal  @default(1.0) @db.Decimal(19, 6)
+  realizedGainLoss Decimal  @default(0) @db.Decimal(19, 4)
+  methodId         BigInt   @unique
+  paidAt           DateTime
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -725,11 +731,13 @@ model Invoice {
   date            DateTime
   contactId       BigInt                @map("contact_id")
   currency        String
+  exchangeRate    Decimal               @default(1.0) @db.Decimal(19, 6)
   subtotal        Decimal
   tax             Decimal               @default(0)
   discount        Decimal               @default(0)
   rounding        Decimal               @default(0)
   total           Decimal
+  baseTotal       Decimal?              @db.Decimal(19, 4)
   status          TransactionStatusType @default(DRAFT)
   notes           String?
   paymentTerms    String?
@@ -827,11 +835,14 @@ model InvoiceLine {
 }
 
 model InvoicePayment {
-  id        BigInt   @id @default(autoincrement())
-  invoiceId BigInt
-  amount    Decimal
-  methodId  BigInt   @unique
-  paidAt    DateTime
+  id               BigInt   @id @default(autoincrement())
+  invoiceId        BigInt
+  amount           Decimal
+  currency         String   @default("MYR")
+  exchangeRate     Decimal  @default(1.0) @db.Decimal(19, 6)
+  realizedGainLoss Decimal  @default(0) @db.Decimal(19, 4)
+  methodId         BigInt   @unique
+  paidAt           DateTime
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -899,9 +910,12 @@ model JournalEntryLine {
   journalEntryId BigInt  @map("journal_entry_id")
   accountId      BigInt  @map("account_id")
   description    String?
-  debit          Decimal @default(0) @db.Decimal(15, 2)
-  credit         Decimal @default(0) @db.Decimal(15, 2)
-  taxId          BigInt? @map("tax_id")
+  debit          Decimal  @default(0) @db.Decimal(15, 2)
+  credit         Decimal  @default(0) @db.Decimal(15, 2)
+  currency       String?
+  foreignAmount  Decimal? @db.Decimal(15, 2)
+  exchangeRate   Decimal? @db.Decimal(19, 6)
+  taxId          BigInt?  @map("tax_id")
 
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
@@ -1551,5 +1565,24 @@ model AccountingPeriod {
   updatedAt DateTime      @updatedAt
 
   @@map("accounting_periods")
+}
+
+// ─── Multi-Currency Exchange Rates ───────────────────────────────────────────
+
+model ExchangeRate {
+  id            BigInt   @id @default(autoincrement())
+  fromCurrency  String   // e.g. "USD"
+  toCurrency    String   // e.g. "MYR"
+  rate          Decimal  @db.Decimal(19, 6) // e.g. 4.450000
+  effectiveDate DateTime @default(now())
+  source        String?  // e.g. "Manual", "Wise", "Maybank", "Stripe"
+  notes         String?
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdBy     BigInt?  @map("created_by")
+  updatedBy     BigInt?  @map("updated_by")
+
+  @@map("exchange_rates")
 }
 

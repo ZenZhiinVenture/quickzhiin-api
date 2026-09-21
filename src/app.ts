@@ -28,6 +28,7 @@ import logger from './utils/logger';
 
 import adminRoutes from './routes/admin';
 import accountingPeriodRoutes from './routes/accountingPeriod';
+import currencyRoutes from './routes/currency';
 
 const app: Express = express();
 
@@ -69,6 +70,7 @@ app.use(`${apiPrefix}/user`, requireTenant, userRoutes);
 app.use(`${apiPrefix}/bank-account`, requireTenant, bankAccountRoutes);
 app.use(`${apiPrefix}/role`, requireTenant, roleRoutes);
 app.use(`${apiPrefix}/banking`, requireTenant, bankingRoutes);
+app.use(`${apiPrefix}/currency`, requireTenant, currencyRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: 'Not Found' });
